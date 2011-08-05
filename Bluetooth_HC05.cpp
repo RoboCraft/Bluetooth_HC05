@@ -261,7 +261,7 @@ bool Bluetooth_HC05::getRole(HC05_Role &role, unsigned long timeout)
   startOperation(timeout);
   writeCommand("ROLE?");
   
-  char response[10];
+  char response[20];
   const char *role_str = readResponseWithPrefix(response, sizeof(response), "+ROLE:");
   
   if (m_errorCode != HC05_OK)
@@ -331,7 +331,7 @@ bool Bluetooth_HC05::getInquiryAccessCode(uint32_t &iac, unsigned long timeout)
   if (isOperationTimedOut())
     return false;
   
-  char response[40];
+  char response[30];
   const char *iac_part = readResponseWithPrefix(response, sizeof(response), "+IAC:");
   
   if (m_errorCode != HC05_OK)
@@ -368,11 +368,14 @@ bool Bluetooth_HC05::getInquiryMode(HC05_InquiryMode &inq_mode,
   max_devices = 0;
   max_duration = 0;
   
-  char response[40];
+  char response[30];
   const char *mode_part = readResponseWithPrefix(response, sizeof(response), "+INQM:");
   
-  if (m_errorCode != HC05_OK || !mode_part)
+  if (m_errorCode != HC05_OK)
     return false;
+    
+  if (!mode_part)
+    return readOK() && false;
   
   inq_mode = static_cast<HC05_InquiryMode>(dec_u8::parse(mode_part));
   
@@ -423,15 +426,22 @@ bool Bluetooth_HC05::getPassword(char *buffer, unsigned long timeout)
   char response[30];
   const char *password = readResponseWithPrefix(response, sizeof(response), "+PSWD:");
   
-  if (m_errorCode != HC05_OK || !password)
+  if (m_errorCode != HC05_OK)
   {
     *buffer = 0;
     return false;
   }
   
+  if (!password)
+  {
+    *buffer = 0;
+    return readOK() && false;
+  }
+  
   strcpy(buffer, password);
   
   return readOK();
+  
 }
 
 
@@ -456,9 +466,12 @@ bool Bluetooth_HC05::getSerialMode(uint32_t &speed, uint8_t &stop_bits,
   char response[30];
   const char *mode_str = readResponseWithPrefix(response, sizeof(response), "+UART:");
   
-  if (m_errorCode != HC05_OK || !mode_str)
+  if (m_errorCode != HC05_OK)
     return false;
-  
+    
+  if (!mode_str)
+    return readOK() && false;
+    
   speed = dec_u32::parse(mode_str);
   
   if (*mode_str != ',')
@@ -504,12 +517,15 @@ bool Bluetooth_HC05::getConnectionMode(
   startOperation(timeout);
   writeCommand("CMODE?");
   
-  char response[10];
+  char response[20];
   const char *mode_part = readResponseWithPrefix(response, sizeof(response), "+CMODE:");
   
-  if (m_errorCode != HC05_OK || !mode_part)
+  if (m_errorCode != HC05_OK)
     return false;
     
+  if (!mode_part)
+    return readOK() && false;
+  
   connection_mode = static_cast<HC05_Connection>(dec_u8::parse(mode_part));
   
   return readOK();
@@ -521,7 +537,7 @@ bool Bluetooth_HC05::setConnectionMode(
 {
   startOperation(timeout);
   
-  char mode_str[10];
+  char mode_str[20];
   sprintf(mode_str, "%u", connection_mode);
   writeCommand("CMODE=", mode_str);
   
@@ -553,8 +569,11 @@ bool Bluetooth_HC05::getLeds(bool &led_status,
   char response[30];
   const char *status_part = readResponseWithPrefix(response, sizeof(response), "+POLAR:");
   
-  if (m_errorCode != HC05_OK || !status_part)
+  if (m_errorCode != HC05_OK)
     return false;
+    
+  if (!status_part)
+    return readOK() && false;
   
   led_status = dec_u8::parse(status_part);
   
@@ -573,7 +592,7 @@ bool Bluetooth_HC05::setLeds(bool led_status,
 {
   startOperation(timeout);
   
-  char leds_str[30];
+  char leds_str[10];
   sprintf(leds_str, "%d,%d", (led_status ? 1 : 0), (led_connection ? 1 : 0));
   writeCommand("POLAR=", leds_str);
   
@@ -581,7 +600,7 @@ bool Bluetooth_HC05::setLeds(bool led_status,
 }
 
 
-bool Bluetooth_HC05::setPortState(uint8_t port_num, uint8_t port_state)
+bool Bluetooth_HC05::setPortState(uint8_t port_num, uint8_t port_state, unsigned long timeout)
 {
   startOperation(timeout);
   
@@ -593,28 +612,32 @@ bool Bluetooth_HC05::setPortState(uint8_t port_num, uint8_t port_state)
 }
 
 
-bool Bluetooth_HC05::getMultiplePorts(uint16_t &port_states)
+bool Bluetooth_HC05::getMultiplePorts(uint16_t &port_states, unsigned long timeout)
 {
   startOperation(timeout);
   writeCommand("MPIO?");
   
-  char response[10];
+  char response[20];
   const char *states_part = readResponseWithPrefix(response, sizeof(response), "+MPIO:");
   
-  if (m_errorCode != HC05_OK || !states_part)
+  if (m_errorCode != HC05_OK)
     return false;
-    
+  
+  if (!states_part)
+    return readOK() && false;
+  
+  port_states = hex_u16::parse(states_part);
   
   return readOK();
 }
 
 
-bool Bluetooth_HC05::setMultiplePorts(uint16_t port_states)
+bool Bluetooth_HC05::setMultiplePorts(uint16_t port_states, unsigned long timeout)
 {
   startOperation(timeout);
   
   char states_str[10];
-  sprintf(states_str, "%u", port_states);
+  sprintf(states_str, "%x", port_states);
   writeCommand("MPIO=", states_str);
   
   return readOK();

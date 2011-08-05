@@ -109,9 +109,10 @@ public:
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool getLeds(bool &led_status, bool &led_connection, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool setLeds(bool led_status, bool led_connection, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
-  bool setPortState(uint8_t port_num, uint8_t port_state);
-  bool getMultiplePorts(uint16_t &port_states);
-  bool setMultiplePorts(uint16_t port_states);
+  bool setPortState(uint8_t port_num, uint8_t port_state, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool getMultiplePorts(uint16_t &port_states, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool setMultiplePorts(uint16_t port_states, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  
   
   static bool parseBluetoothAddress(BluetoothAddress &address, const char *addr_str);
   static void printBluetoothAddress(char *addr_str,
