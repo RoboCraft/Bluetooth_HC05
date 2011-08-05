@@ -62,7 +62,7 @@ typedef uint8_t BluetoothAddress[6];
 extern const float HC05_INQUIRY_QUANT; // 1.28
 
 
-class Bluetooth_HC05
+class Bluetooth_HC05: public Print
 {
 public:
   Bluetooth_HC05(HardwareSerial &serial = Serial);
@@ -112,7 +112,12 @@ public:
   bool setPortState(uint8_t port_num, uint8_t port_state, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool getMultiplePorts(uint16_t &port_states, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool setMultiplePorts(uint16_t port_states, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
-  
+  bool getPagingAndInquiryParams(uint16_t &inquiry_interval, uint16_t &inquiry_duration,
+    uint16_t &paging_interval, uint16_t &paging_duration,
+    unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool setPagingAndInquiryParams(uint16_t inquiry_interval, uint16_t inquiry_duration,
+    uint16_t paging_interval, uint16_t paging_duration,
+    unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   
   static bool parseBluetoothAddress(BluetoothAddress &address, const char *addr_str);
   static void printBluetoothAddress(char *addr_str,
@@ -141,6 +146,8 @@ private:
   void startOperation(unsigned long timeout);
   bool isOperationTimedOut() const;
   unsigned long operationDuration() const;
+  
+  virtual void write(uint8_t data);
 };
 
 #endif // BLUETOOTH_HC05_

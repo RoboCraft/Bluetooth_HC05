@@ -644,6 +644,61 @@ bool Bluetooth_HC05::setMultiplePorts(uint16_t port_states, unsigned long timeou
 }
 
 
+bool Bluetooth_HC05::getPagingAndInquiryParams(
+  uint16_t &inquiry_interval, uint16_t &inquiry_duration,
+  uint16_t &paging_interval, uint16_t &paging_duration, unsigned long timeout)
+{
+  startOperation(timeout);
+  writeCommand("IPSCAN?");
+  
+  char response[40];
+  const char *params_part = readResponseWithPrefix(response, sizeof(response), "+IPSCAN:");
+  
+  if (m_errorCode != HC05_OK)
+    return false;
+  
+  if (!params_part)
+    return readOK() && false;
+  
+  inquiry_interval = dec_u16::parse(params_part);
+  
+  if (*params_part != ',')
+    return readOK() && false;
+    
+  ++params_part;
+  inquiry_duration = dec_u16::parse(params_part);
+  
+  if (*params_part != ',')
+    return readOK() && false;
+    
+  ++params_part;
+  paging_interval = dec_u16::parse(params_part);
+  
+  if (*params_part != ',')
+    return readOK() && false;
+    
+  ++params_part;
+  paging_duration = dec_u16::parse(params_part);
+  
+  return readOK();
+}
+
+
+bool Bluetooth_HC05::setPagingAndInquiryParams(
+  uint16_t inquiry_interval, uint16_t inquiry_duration,
+  uint16_t paging_interval, uint16_t paging_duration, unsigned long timeout)
+{
+  startOperation(timeout);
+  
+  char params_str[40];
+  sprintf(params_str, "%u,%u,%u,%u",
+    inquiry_interval, inquiry_duration, paging_interval, paging_duration);
+  writeCommand("IPSCAN=", params_str);
+  
+  return readOK();
+}
+
+
 bool Bluetooth_HC05::readAddressWithCommand(BluetoothAddress &address,
   const char *command_name, unsigned long timeout)
 {
@@ -871,4 +926,10 @@ unsigned long Bluetooth_HC05::operationDuration() const
     elapsed_ticks = (ULONG_MAX - m_ticksAtStart) + current_ticks;
   
   return elapsed_ticks;
+}
+
+
+void Bluetooth_HC05::write(uint8_t data)
+{
+  m_uart->write(data);
 }
