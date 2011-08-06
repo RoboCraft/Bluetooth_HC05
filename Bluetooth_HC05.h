@@ -133,6 +133,15 @@ public:
     HC05_Encryption &encryption, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool setSecurityAndEncryption(HC05_Security security,
     HC05_Encryption encryption, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool deleteDeviceFromList(const BluetoothAddress &address,
+    unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool deleteAllDevicesFromList(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool findDeviceInList(const BluetoothAddress &address,
+    unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool deviceCountInList(uint8_t &device_count,
+    unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool getLastAuthenticatedDevice(BluetoothAddress &address,
+    unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   
   static bool parseBluetoothAddress(BluetoothAddress &address, const char *addr_str);
   static void printBluetoothAddress(char *addr_str,
@@ -147,12 +156,12 @@ private:
   uint8_t m_resetPin;
   HC05_Result m_errorCode;
   
-  bool readAddressWithCommand(BluetoothAddress &address, const char *command_name,
-    unsigned long timeout = HC05_DEFAULT_TIMEOUT);
-  bool writeAddressWithCommand(const BluetoothAddress &address, const char *command_name,
-    unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool readAddressWithCommand(BluetoothAddress &address,
+    const char *command_name, unsigned long timeout);
+  bool writeAddressWithCommand(const BluetoothAddress &address,
+    const char *command_name, unsigned long timeout);
 
-  bool readOK();
+  bool readOperationResult();
   void writeCommand(const char *command, const char *arg = 0);
   size_t readLine(char *buffer, size_t buffer_size);
   char *readResponseWithPrefix(char *buffer, size_t buffer_size, char *prefix);
