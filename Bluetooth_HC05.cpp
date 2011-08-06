@@ -644,7 +644,7 @@ bool Bluetooth_HC05::setMultiplePorts(uint16_t port_states, unsigned long timeou
 }
 
 
-bool Bluetooth_HC05::getPagingAndInquiryParams(
+bool Bluetooth_HC05::getInquiryAndPagingParams(
   uint16_t &inquiry_interval, uint16_t &inquiry_duration,
   uint16_t &paging_interval, uint16_t &paging_duration, unsigned long timeout)
 {
@@ -684,7 +684,7 @@ bool Bluetooth_HC05::getPagingAndInquiryParams(
 }
 
 
-bool Bluetooth_HC05::setPagingAndInquiryParams(
+bool Bluetooth_HC05::setInquiryAndPagingParams(
   uint16_t inquiry_interval, uint16_t inquiry_duration,
   uint16_t paging_interval, uint16_t paging_duration, unsigned long timeout)
 {
@@ -695,6 +695,74 @@ bool Bluetooth_HC05::setPagingAndInquiryParams(
     inquiry_interval, inquiry_duration, paging_interval, paging_duration);
   writeCommand("IPSCAN=", params_str);
   
+  return readOK();
+}
+
+
+bool Bluetooth_HC05::getSniffParams(uint16_t &max_time, uint16_t &min_time,
+  uint16_t &retry_interval, uint16_t &sniff_timeout, unsigned long timeout)
+{
+  startOperation(timeout);
+  writeCommand("SNIFF?");
+  
+  char response[40];
+  const char *params_part = readResponseWithPrefix(response, sizeof(response), "+SNIFF:");
+  
+  if (m_errorCode != HC05_OK)
+    return false;
+  
+  if (!params_part)
+    return readOK() && false;
+  
+  max_time = dec_u16::parse(params_part);
+  
+  if (*params_part != ',')
+    return readOK() && false;
+    
+  ++params_part;
+  min_time = dec_u16::parse(params_part);
+  
+  if (*params_part != ',')
+    return readOK() && false;
+    
+  ++params_part;
+  retry_interval = dec_u16::parse(params_part);
+  
+  if (*params_part != ',')
+    return readOK() && false;
+    
+  ++params_part;
+  sniff_timeout = dec_u16::parse(params_part);
+  
+  return readOK();
+}
+
+
+bool Bluetooth_HC05::setSniffParams(uint16_t max_time, uint16_t min_time,
+  uint16_t retry_interval, uint16_t sniff_timeout, unsigned long timeout)
+{
+  startOperation(timeout);
+  
+  char params_str[40];
+  sprintf(params_str, "%u,%u,%u,%u", max_time, min_time, retry_interval, sniff_timeout);
+  writeCommand("SNIFF=", params_str);
+  
+  return readOK();
+}
+
+
+bool Bluetooth_HC05::enterSniffMode(unsigned long timeout)
+{
+  startOperation(timeout);
+  writeCommand("ENSNIFF");
+  return readOK();
+}
+
+
+bool Bluetooth_HC05::exitSniffMode(unsigned long timeout)
+{
+  startOperation(timeout);
+  writeCommand("EXSNIFF");
   return readOK();
 }
 

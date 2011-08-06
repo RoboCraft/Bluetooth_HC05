@@ -8,7 +8,7 @@
 
 enum
 {
-  HC05_DEFAULT_TIMEOUT = 100,
+  HC05_DEFAULT_TIMEOUT = 200,
   HC05_PASSWORD_MAXLEN = 16,
   BLUETOOTH_ADDRESS_MAXLEN = 14
 };
@@ -112,12 +112,20 @@ public:
   bool setPortState(uint8_t port_num, uint8_t port_state, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool getMultiplePorts(uint16_t &port_states, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool setMultiplePorts(uint16_t port_states, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
-  bool getPagingAndInquiryParams(uint16_t &inquiry_interval, uint16_t &inquiry_duration,
+  bool getInquiryAndPagingParams(uint16_t &inquiry_interval, uint16_t &inquiry_duration,
     uint16_t &paging_interval, uint16_t &paging_duration,
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
-  bool setPagingAndInquiryParams(uint16_t inquiry_interval, uint16_t inquiry_duration,
+  bool setInquiryAndPagingParams(uint16_t inquiry_interval, uint16_t inquiry_duration,
     uint16_t paging_interval, uint16_t paging_duration,
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool getSniffParams(uint16_t &max_time, uint16_t &min_time,
+    uint16_t &retry_interval, uint16_t &sniff_timeout,
+    unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool setSniffParams(uint16_t max_time, uint16_t min_time,
+    uint16_t retry_interval, uint16_t sniff_timeout,
+    unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool enterSniffMode(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool exitSniffMode(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   
   static bool parseBluetoothAddress(BluetoothAddress &address, const char *addr_str);
   static void printBluetoothAddress(char *addr_str,
