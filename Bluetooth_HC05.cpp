@@ -767,6 +767,46 @@ bool Bluetooth_HC05::exitSniffMode(unsigned long timeout)
 }
 
 
+bool Bluetooth_HC05::getSecurityAndEncryption(HC05_Security &security,
+  HC05_Encryption &encryption, unsigned long timeout)
+{
+  startOperation(timeout);
+  writeCommand("SENM?");
+  
+  char response[20];
+  const char *params_part = readResponseWithPrefix(response, sizeof(response), "+SENM:");
+  
+  if (m_errorCode != HC05_OK)
+    return false;
+  
+  if (!params_part)
+    return readOK() && false;
+  
+  security = static_cast<HC05_Security>(dec_u8::parse(params_part));
+  
+  if (*params_part != ',')
+    return readOK() && false;
+    
+  ++params_part;
+  encryption = static_cast<HC05_Encryption>(dec_u8::parse(params_part));
+  
+  return readOK();
+}
+
+
+bool Bluetooth_HC05::setSecurityAndEncryption(HC05_Security security,
+  HC05_Encryption encryption, unsigned long timeout)
+{
+  startOperation(timeout);
+  
+  char params_str[10];
+  sprintf(params_str, "%u,%u", security, encryption);
+  writeCommand("SENM=", params_str);
+  
+  return readOK();
+}
+    
+
 bool Bluetooth_HC05::readAddressWithCommand(BluetoothAddress &address,
   const char *command_name, unsigned long timeout)
 {

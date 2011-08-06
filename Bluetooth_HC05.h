@@ -18,6 +18,9 @@ enum HC05_Role { HC05_ROLE_SLAVE = 0, HC05_ROLE_MASTER = 1, HC05_ROLE_SLAVE_LOOP
 enum HC05_InquiryMode { HC05_INQUIRY_STANDARD, HC05_INQUIRY_RSSI };
 enum HC05_Parity { HC05_NO_PARITY, HC05_PARITY_ODD, HC05_PARITY_EVEN };
 enum HC05_Connection { HC05_CONNECT_BOUND, HC05_CONNECT_ANY, HC05_CONNECT_SLAVE_LOOP };
+enum HC05_Security { HC05_SEC_OFF, HC05_SEC_NON_SECURE,
+  HC05_SEC_SERVICE, HC05_SEC_LINK, HC05_SEC_UNKNOWN };
+enum HC05_Encryption { HC05_ENC_OFF, HC05_ENC_PTP, HC05_ENC_PTP_BROADCAST };
 
 enum HC05_Result
 {
@@ -126,6 +129,10 @@ public:
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool enterSniffMode(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool exitSniffMode(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool getSecurityAndEncryption(HC05_Security &security,
+    HC05_Encryption &encryption, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool setSecurityAndEncryption(HC05_Security security,
+    HC05_Encryption encryption, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   
   static bool parseBluetoothAddress(BluetoothAddress &address, const char *addr_str);
   static void printBluetoothAddress(char *addr_str,
