@@ -196,6 +196,13 @@ bool Bluetooth_HC05::getAddress(BluetoothAddress &address, unsigned long timeout
 bool Bluetooth_HC05::getName(char *buffer, size_t buffer_size, unsigned long timeout)
 {
   startOperation(timeout);
+  
+  if (!buffer)
+  {
+    m_errorCode = HC05_FAIL;
+    return false;
+  }
+  
   writeCommand("NAME?");
   
   char response[40];
@@ -234,6 +241,13 @@ bool Bluetooth_HC05::getRemoteDeviceName(char *buffer,
   size_t buffer_size, unsigned long timeout)
 {
   startOperation(timeout);
+  
+  if (!buffer || !buffer_size)
+  {
+    m_errorCode = HC05_FAIL;
+    return false;
+  }
+  
   writeCommand("RNAME?");
   
   char response[40];
@@ -270,7 +284,7 @@ bool Bluetooth_HC05::getRole(HC05_Role &role, unsigned long timeout)
   if (!role_str)
     return readOperationResult() && false;
   
-  role = static_cast<HC05_Role>(dec_u8::parse(role_str));//strtol(role_str, 0, 10));
+  role = static_cast<HC05_Role>(dec_u8::parse(role_str));
   
   return readOperationResult();
 }
@@ -281,9 +295,9 @@ bool Bluetooth_HC05::setRole(HC05_Role role, unsigned long timeout)
   startOperation(timeout);
   
   char role_str[10] = { role, 0 };
-  sprintf(role_str, "%d", role);
-  writeCommand("ROLE=", role_str);
+  snprintf(role_str, sizeof(role_str), "%d", role);
   
+  writeCommand("ROLE=", role_str);
   return readOperationResult();
 }
 
@@ -303,7 +317,7 @@ bool Bluetooth_HC05::getDeviceClass(uint32_t &device_class, unsigned long timeou
   if (!class_part)
     return readOperationResult() && false;
   
-  device_class = hex_u32::parse(class_part);//strtoul(class_part, 0, 16);
+  device_class = hex_u32::parse(class_part);
   
   return readOperationResult();
 }
@@ -314,10 +328,9 @@ bool Bluetooth_HC05::setDeviceClass(uint32_t device_class, unsigned long timeout
   startOperation(timeout);
   
   char class_str[10];
-  sprintf(class_str, "%lx", device_class);
+  snprintf(class_str, sizeof(class_str), "%lx", device_class);
   
   writeCommand("CLASS=", class_str);
-  
   return readOperationResult();
 }
 
@@ -340,7 +353,7 @@ bool Bluetooth_HC05::getInquiryAccessCode(uint32_t &iac, unsigned long timeout)
   if (!iac_part)
     return readOperationResult() && false;
   
-  iac = hex_u32::parse(iac_part);//strtoul(iac_part, 0, 16);
+  iac = hex_u32::parse(iac_part);
   
   return readOperationResult();
 }
@@ -351,7 +364,7 @@ bool Bluetooth_HC05::setInquiryAccessCode(uint32_t iac, unsigned long timeout)
   startOperation(timeout);
   
   char iac_str[10];
-  sprintf(iac_str, "%lx", iac);
+  snprintf(iac_str, sizeof(iac_str), "%lx", iac);
   writeCommand("IAC=", iac_str);
   
   return readOperationResult();
@@ -407,7 +420,7 @@ bool Bluetooth_HC05::setInquiryMode(HC05_InquiryMode inq_mode,
    * Tricky chinese engineers (-_-)
    *                            "
    */
-  sprintf(mode, "%d,%u,%u", inq_mode, (uint16_t)max_devices, max_duration);
+  snprintf(mode, sizeof(mode), "%d,%u,%u", inq_mode, (uint16_t)max_devices, max_duration);
   
   writeCommand("INQM=", mode);
   
@@ -417,14 +430,18 @@ bool Bluetooth_HC05::setInquiryMode(HC05_InquiryMode inq_mode,
 
 bool Bluetooth_HC05::getPassword(char *buffer, unsigned long timeout)
 {
-  if (!buffer)
-    return false;
-    
   startOperation(timeout);
+  
+  if (!buffer)
+  {
+    m_errorCode = HC05_FAIL;
+    return false;
+  }
+  
   writeCommand("PSWD?");
   
-  char response[30];
-  const char *password = readResponseWithPrefix(response, sizeof(response), "+PSWD:");
+  char response[HC05_PASSWORD_MAXLEN + 15];
+  const char *password_part = readResponseWithPrefix(response, sizeof(response), "+PSWD:");
   
   if (m_errorCode != HC05_OK)
   {
@@ -432,27 +449,29 @@ bool Bluetooth_HC05::getPassword(char *buffer, unsigned long timeout)
     return false;
   }
   
-  if (!password)
+  if (!password_part)
   {
     *buffer = 0;
     return readOperationResult() && false;
   }
   
-  strcpy(buffer, password);
+  snprintf(buffer, HC05_PASSWORD_BUFSIZE, "%s", password_part);
   
   return readOperationResult();
-  
 }
 
 
 bool Bluetooth_HC05::setPassword(const char *password, unsigned long timeout)
 {
-  if (!password)
-    return false;
-    
   startOperation(timeout);
-  writeCommand("PSWD=", password);
   
+  if (!password)
+  {
+    m_errorCode = HC05_FAIL;
+    return false;
+  }
+  
+  writeCommand("PSWD=", password);
   return readOperationResult();
 }
 
@@ -504,9 +523,9 @@ bool Bluetooth_HC05::setSerialMode(uint32_t speed, uint8_t stop_bits,
   stop_bits -= 1; // 0: 1 stop bit, 1: 2 stop bits, any other are not allowed
   
   char mode_str[20];
-  sprintf(mode_str, "%lu,%u,%u", speed, stop_bits, parity);
-  writeCommand("UART=", mode_str);
+  snprintf(mode_str, sizeof(mode_str), "%lu,%u,%u", speed, stop_bits, parity);
   
+  writeCommand("UART=", mode_str);
   return readOperationResult();
 }
 
@@ -538,7 +557,7 @@ bool Bluetooth_HC05::setConnectionMode(
   startOperation(timeout);
   
   char mode_str[20];
-  sprintf(mode_str, "%u", connection_mode);
+  snprintf(mode_str, sizeof(mode_str), "%u", connection_mode);
   writeCommand("CMODE=", mode_str);
   
   return readOperationResult();
@@ -593,9 +612,10 @@ bool Bluetooth_HC05::setLeds(bool led_status,
   startOperation(timeout);
   
   char leds_str[10];
-  sprintf(leds_str, "%d,%d", (led_status ? 1 : 0), (led_connection ? 1 : 0));
-  writeCommand("POLAR=", leds_str);
+  snprintf(leds_str, sizeof(leds_str),
+    "%d,%d", (led_status ? 1 : 0), (led_connection ? 1 : 0));
   
+  writeCommand("POLAR=", leds_str);
   return readOperationResult();
 }
 
@@ -605,9 +625,9 @@ bool Bluetooth_HC05::setPortState(uint8_t port_num, uint8_t port_state, unsigned
   startOperation(timeout);
   
   char state_str[10];
-  sprintf(state_str, "%u,%u", port_num, port_state);
-  writeCommand("PIO=", state_str);
+  snprintf(state_str, sizeof(state_str), "%u,%u", port_num, port_state);
   
+  writeCommand("PIO=", state_str);
   return readOperationResult();
 }
 
@@ -616,6 +636,8 @@ bool Bluetooth_HC05::getMultiplePorts(uint16_t &port_states, unsigned long timeo
 {
   startOperation(timeout);
   writeCommand("MPIO?");
+  
+  port_states = 0;
   
   char response[20];
   const char *states_part = readResponseWithPrefix(response, sizeof(response), "+MPIO:");
@@ -637,9 +659,9 @@ bool Bluetooth_HC05::setMultiplePorts(uint16_t port_states, unsigned long timeou
   startOperation(timeout);
   
   char states_str[10];
-  sprintf(states_str, "%x", port_states);
-  writeCommand("MPIO=", states_str);
+  snprintf(states_str, sizeof(states_str), "%x", port_states);
   
+  writeCommand("MPIO=", states_str);
   return readOperationResult();
 }
 
@@ -691,10 +713,10 @@ bool Bluetooth_HC05::setInquiryAndPagingParams(
   startOperation(timeout);
   
   char params_str[40];
-  sprintf(params_str, "%u,%u,%u,%u",
+  snprintf(params_str, sizeof(params_str), "%u,%u,%u,%u",
     inquiry_interval, inquiry_duration, paging_interval, paging_duration);
+    
   writeCommand("IPSCAN=", params_str);
-  
   return readOperationResult();
 }
 
@@ -744,9 +766,9 @@ bool Bluetooth_HC05::setSniffParams(uint16_t max_time, uint16_t min_time,
   startOperation(timeout);
   
   char params_str[40];
-  sprintf(params_str, "%u,%u,%u,%u", max_time, min_time, retry_interval, sniff_timeout);
-  writeCommand("SNIFF=", params_str);
+  snprintf(params_str, sizeof(params_str), "%u,%u,%u,%u", max_time, min_time, retry_interval, sniff_timeout);
   
+  writeCommand("SNIFF=", params_str);
   return readOperationResult();
 }
 
@@ -800,9 +822,9 @@ bool Bluetooth_HC05::setSecurityAndEncryption(HC05_Security security,
   startOperation(timeout);
   
   char params_str[10];
-  sprintf(params_str, "%u,%u", security, encryption);
-  writeCommand("SENM=", params_str);
+  snprintf(params_str, sizeof(params_str), "%u,%u", security, encryption);
   
+  writeCommand("SENM=", params_str);
   return readOperationResult();
 }
 
@@ -825,17 +847,7 @@ bool Bluetooth_HC05::deleteAllDevicesFromList(unsigned long timeout)
 bool Bluetooth_HC05::findDeviceInList(
   const BluetoothAddress &address, unsigned long timeout)
 {
-  //return writeAddressWithCommand(address, "FSAD", timeout);
-  startOperation(timeout);
-  
-  //char command[30];
-  //sprintf(command, "%s=", command_name);
-  char address_str[BLUETOOTH_ADDRESS_MAXLEN + 1];
-  printBluetoothAddress(address_str, address, ',');
-  
-  writeCommand("FSAD=", address_str);
-  
-  return readOperationResult();
+  return writeAddressWithCommand(address, "FSAD", timeout);
 }
 
 
@@ -880,9 +892,9 @@ bool Bluetooth_HC05::readAddressWithCommand(BluetoothAddress &address,
   /* Response should look like "+<command_name>:<NAP>:<UAP>:<LAP>",
    * where actual address will look like "1234:56:abcdef".
    */
-  char response[BLUETOOTH_ADDRESS_MAXLEN + 20];
+  char response[BLUETOOTH_ADDRESS_BUFSIZE + 20];
   char response_pattern[20];
-  sprintf(response_pattern, "+%s:", command_name);
+  snprintf(response_pattern, sizeof(response_pattern), "+%s:", command_name);
   char *addr_part = readResponseWithPrefix(response, sizeof(response), response_pattern);
   
   if (m_errorCode != HC05_OK)
@@ -904,20 +916,19 @@ bool Bluetooth_HC05::writeAddressWithCommand(const BluetoothAddress &address,
   startOperation(timeout);
   
   char command[20];
-  sprintf(command, "%s=", command_name);
+  snprintf(command, sizeof(command), "%s=", command_name);
   
-  char address_str[BLUETOOTH_ADDRESS_MAXLEN + 1];
+  char address_str[BLUETOOTH_ADDRESS_BUFSIZE];
   printBluetoothAddress(address_str, address, ',');
   
   writeCommand(command, address_str);
-  
   return readOperationResult();
 }
 
 
 bool Bluetooth_HC05::readOperationResult()
 {
-  char response[20];
+  char response[15];
   readLine(response, sizeof(response));
   
   return strcmp(response, "OK") == 0;
@@ -989,20 +1000,20 @@ bool Bluetooth_HC05::parseBluetoothAddress(BluetoothAddress &address, const char
   
   const char *digits_ptr = const_cast<char*>(address_str);
   uint8_t NAP[2];
-  *((uint16_t*)NAP) = hex_u16::parse(digits_ptr);//strtol(digits_ptr, &digits_ptr, 16);
+  *((uint16_t*)NAP) = hex_u16::parse(digits_ptr);
   
   if (*digits_ptr != ':')
     return false;
   
   ++digits_ptr;
-  uint8_t UAP = hex_u8::parse(digits_ptr);//strtol(digits_ptr, &digits_ptr, 16);
+  uint8_t UAP = hex_u8::parse(digits_ptr);
   
   if (*digits_ptr != ':')
     return false;
   
   ++digits_ptr;
   uint8_t LAP[4];
-  *((uint32_t*)LAP) = hex_u32::parse(digits_ptr);//strtol(digits_ptr, &digits_ptr, 16);
+  *((uint32_t*)LAP) = hex_u32::parse(digits_ptr);
   
   address[0] = NAP[1];
   address[1] = NAP[0];
@@ -1032,7 +1043,7 @@ void Bluetooth_HC05::printBluetoothAddress(char *address_str,
     LAP[2] = address[3];
     LAP[3] = 0;
     
-    sprintf(address_str, "%x%c%x%c%lx",
+    snprintf(address_str, BLUETOOTH_ADDRESS_BUFSIZE, "%x%c%x%c%lx",
       *reinterpret_cast<const uint16_t*>(NAP),
       delimiter,
       UAP,
