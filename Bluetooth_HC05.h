@@ -10,12 +10,13 @@ enum
 {
   HC05_DEFAULT_TIMEOUT = 200,
   HC05_INQUIRY_DEFAULT_TIMEOUT = 10000,
+  HC05_PAIRING_DEFAULT_TIMEOUT = 10000,
   HC05_PASSWORD_MAXLEN = 16,
   HC05_PASSWORD_BUFSIZE = HC05_PASSWORD_MAXLEN + 1,
   HC05_NAME_MAXLEN = 32,
   HC05_NAME_BUFSIZE = HC05_NAME_MAXLEN + 1,
-  BLUETOOTH_ADDRESS_MAXLEN = 14,
-  BLUETOOTH_ADDRESS_BUFSIZE = BLUETOOTH_ADDRESS_MAXLEN + 1,
+  HC05_ADDRESS_MAXLEN = 14,
+  HC05_ADDRESS_BUFSIZE = HC05_ADDRESS_MAXLEN + 1,
 };
 
 enum HC05_Mode { HC05_MODE_DATA = 0, HC05_MODE_COMMAND = 1 };
@@ -46,6 +47,11 @@ enum HC05_Result
   HC05_FAIL = 0xFE,
   HC05_ERR_TIMEOUT = 0xFD,
   HC05_ERR_ARGUMENT = 0xFC,
+  
+  HC05_ERR_DISCONNECT_LINK_LOSS = 0xFB,
+  HC05_ERR_DISCONNECT_NO_SLC = 0xFA,
+  HC05_ERR_DISCONNECT_TIMEOUT = 0xF9,
+  HC05_ERR_DISCONNECT_ERROR = 0xF8,
   
   HC05_ERR_AT_COMMAND = 0x00,
   HC05_ERR_DEFAULT_RESULT = 0x01,
@@ -163,12 +169,16 @@ public:
   bool initSerialPortProfile(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   
   typedef void (*InquiryCallback)(const BluetoothAddress &address);
+  
   bool inquire(InquiryCallback callback, unsigned long timeout = HC05_INQUIRY_DEFAULT_TIMEOUT);
   bool cancelInquiry(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool pair(const BluetoothAddress &address, unsigned long timeout = HC05_PAIRING_DEFAULT_TIMEOUT);
+  bool connect(const BluetoothAddress &address, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool disconnect(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   
   static bool parseBluetoothAddress(BluetoothAddress &address,
-    const char *addr_str, char delimiter);
-  static void printBluetoothAddress(char *addr_str,
+    const char *address_str, char delimiter);
+  static int printBluetoothAddress(char *address_str,
     const BluetoothAddress &address, char delimiter);
   
 private:

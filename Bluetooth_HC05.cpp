@@ -934,14 +934,16 @@ bool Bluetooth_HC05::inquire(InquiryCallback callback, unsigned long timeout)
     if (m_uart->peek() != '+')
       break;
     
-    char response[BLUETOOTH_ADDRESS_BUFSIZE + 10];
+    char response[HC05_ADDRESS_BUFSIZE + 10];
     PGM_STRING(response_pattern, "+INQ:");
     const char *address_part;
     address_part = readResponseWithPrefix(response, sizeof(response), response_pattern);
     
     BluetoothAddress address;
     parseBluetoothAddress(address, address_part, ':');
-    callback(address);
+    
+    if (callback)
+      callback(address);
   }
   
   return readOperationResult();
@@ -952,6 +954,57 @@ bool Bluetooth_HC05::cancelInquiry(unsigned long timeout)
 {
   PGM_STRING(command, "INQC");
   return simpleCommand(command, 0, timeout);
+}
+
+
+bool Bluetooth_HC05::pair(const BluetoothAddress &address, unsigned long timeout)
+{
+  char params_str[HC05_ADDRESS_BUFSIZE + 15];
+  int address_length = printBluetoothAddress(params_str, address, ',');
+  
+  PGM_STRING(format, ",%lu");
+  snprintf(params_str + address_length,
+    sizeof(params_str) - address_length, format, timeout);
+  
+  PGM_STRING(command, "PAIR");
+  return simpleCommand(command, params_str, timeout);
+}
+
+
+bool Bluetooth_HC05::connect(const BluetoothAddress &address, unsigned long timeout)
+{
+  return writeAddressWithCommand(address, "LINK", timeout);
+}
+
+
+bool Bluetooth_HC05::disconnect(unsigned long timeout)
+{
+  startOperation(timeout);
+  writeCommand("DISC");
+  
+  PGM_STRING(SUCCESS, "SUCCESS");
+  PGM_STRING(LINK_LOSS, "LINK_LOSS");
+  PGM_STRING(NO_SLC, "NO_SLC");
+  PGM_STRING(TIMEOUT, "TIMEOUT");
+  PGM_STRING(ERROR, "ERROR");
+  
+  char response[20];
+  PGM_STRING(response_pattern, "+DISC:");
+  const char *status_part = readResponseWithPrefix(
+    response, sizeof(response), response_pattern);
+  
+  if (strcmp(status_part, SUCCESS) == 0)
+    m_errorCode = HC05_OK;
+  else if (strcmp(status_part, LINK_LOSS) == 0)
+    m_errorCode = HC05_ERR_DISCONNECT_LINK_LOSS;
+  else if (strcmp(status_part, NO_SLC) == 0)
+    m_errorCode = HC05_ERR_DISCONNECT_NO_SLC;
+  else if (strcmp(status_part, TIMEOUT) == 0)
+    m_errorCode = HC05_ERR_DISCONNECT_TIMEOUT;
+  else if (strcmp(status_part, ERROR) == 0)
+    m_errorCode = HC05_ERR_DISCONNECT_ERROR;
+   
+   return readOperationResult();
 }
 
 
@@ -969,7 +1022,7 @@ bool Bluetooth_HC05::readAddressWithCommand(BluetoothAddress &address,
   /* Response should look like "+<command_name>:<NAP>:<UAP>:<LAP>",
    * where actual address will look like "1234:56:abcdef".
    */
-  char response[BLUETOOTH_ADDRESS_BUFSIZE + 20];
+  char response[HC05_ADDRESS_BUFSIZE + 20];
   char response_pattern[20];
   
   PGM_STRING(format, "+%s:");
@@ -997,7 +1050,7 @@ bool Bluetooth_HC05::writeAddressWithCommand(const BluetoothAddress &address,
   PGM_STRING(format, "%s=");
   snprintf(command, sizeof(command), format, command_name);
   
-  char address_str[BLUETOOTH_ADDRESS_BUFSIZE];
+  char address_str[HC05_ADDRESS_BUFSIZE];
   printBluetoothAddress(address_str, address, ',');
   
   return simpleCommand(command, address_str, timeout);
@@ -1119,30 +1172,32 @@ bool Bluetooth_HC05::parseBluetoothAddress(
 }
 
 
-void Bluetooth_HC05::printBluetoothAddress(char *address_str,
+int Bluetooth_HC05::printBluetoothAddress(char *address_str,
   const BluetoothAddress &address, char delimiter)
 {
-  if (address && address_str)
-  {
-    uint8_t NAP[2];
-    NAP[0] = address[1];
-    NAP[1] = address[0];
+  if (!address || !address_str)
+    return 0;
     
-    uint8_t UAP = address[2];
-    
-    uint8_t LAP[4];
-    LAP[0] = address[5];
-    LAP[1] = address[4];
-    LAP[2] = address[3];
-    LAP[3] = 0;
-    
-    PGM_STRING(format, "%x%c%x%c%lx");
-    
-    snprintf(address_str, BLUETOOTH_ADDRESS_BUFSIZE, format,
-      *reinterpret_cast<const uint16_t*>(NAP),
-      delimiter, UAP, delimiter,
-      *reinterpret_cast<const uint32_t*>(LAP));
-  }
+  uint8_t NAP[2];
+  NAP[0] = address[1];
+  NAP[1] = address[0];
+  
+  uint8_t UAP = address[2];
+  
+  uint8_t LAP[4];
+  LAP[0] = address[5];
+  LAP[1] = address[4];
+  LAP[2] = address[3];
+  LAP[3] = 0;
+  
+  PGM_STRING(format, "%x%c%x%c%lx");
+  
+  int written = snprintf(address_str, HC05_ADDRESS_BUFSIZE, format,
+    *reinterpret_cast<const uint16_t*>(NAP),
+    delimiter, UAP, delimiter,
+    *reinterpret_cast<const uint32_t*>(LAP));
+  
+  return written;
 }
 
 
