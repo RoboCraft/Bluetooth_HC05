@@ -45,6 +45,7 @@ enum HC05_Result
   HC05_OK = 0xFF,
   HC05_FAIL = 0xFE,
   HC05_ERR_TIMEOUT = 0xFD,
+  HC05_ERR_ARGUMENT = 0xFC,
   
   HC05_ERR_AT_COMMAND = 0x00,
   HC05_ERR_DEFAULT_RESULT = 0x01,
@@ -183,6 +184,7 @@ private:
     const char *command_name, unsigned long timeout);
   bool writeAddressWithCommand(const BluetoothAddress &address,
     const char *command_name, unsigned long timeout);
+  bool simpleCommand(const char *command_name, const char *arg, unsigned long timeout);
 
   bool readOperationResult();
   void writeCommand(const char *command, const char *arg = 0);

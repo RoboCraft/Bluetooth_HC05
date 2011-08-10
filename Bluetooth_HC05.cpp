@@ -95,12 +95,8 @@ void Bluetooth_HC05::hardReset()
 
 bool Bluetooth_HC05::softReset(unsigned long timeout)
 {
-  startOperation(timeout);
-  
   PGM_STRING(reset_cmd, "RESET");
-  writeCommand(reset_cmd);
-  
-  return readOperationResult();
+  return simpleCommand(reset_cmd, 0, timeout);
 }
 
 
@@ -111,14 +107,14 @@ bool Bluetooth_HC05::getVersion(char *buffer, size_t buffer_size, unsigned long 
   if (!buffer || buffer_size <= 1)
     return false;
   
-  PGM_STRING(version_query, "VERSION?");
-  writeCommand(version_query);
+  PGM_STRING(command, "VERSION?");
+  writeCommand(command);
   
   /* Response should look like "+VERSION:2.0-20100601" */
   char response[30];
-  PGM_STRING(version_pattern, "+VERSION:");
+  PGM_STRING(response_pattern, "+VERSION:");
   const char *version = readResponseWithPrefix(
-    response, sizeof(response), version_pattern);
+    response, sizeof(response), response_pattern);
   
   if (m_errorCode != HC05_OK)
     return false;
@@ -129,22 +125,15 @@ bool Bluetooth_HC05::getVersion(char *buffer, size_t buffer_size, unsigned long 
     return readOperationResult() && false;
   }
   
-  size_t copy_size = min(strlen(version), buffer_size - 1);
-  memcpy(buffer, version, copy_size);
-  buffer[copy_size] = 0;
-  
+  snprintf(buffer, buffer_size, "%s", version);
   return readOperationResult();
 }
 
 
 bool Bluetooth_HC05::restoreDefaults(unsigned long timeout)
 {
-  startOperation(timeout);
-  
   PGM_STRING(command, "ORGL");
-  writeCommand(command);
-  
-  return readOperationResult();
+  return simpleCommand(command, 0, timeout);
 }
 
 
@@ -190,15 +179,8 @@ bool Bluetooth_HC05::getName(char *buffer, unsigned long timeout)
 
 bool Bluetooth_HC05::setName(const char *name, unsigned long timeout)
 {
-  startOperation(timeout);
-  
-  if (!name)
-    return false;
-  
-  PGM_STRING(command, "NAME=");
-  writeCommand(command, name);
-  
-  return readOperationResult();
+  PGM_STRING(command, "NAME=")
+  return simpleCommand(command, name, timeout);
 }
 
 
@@ -262,15 +244,12 @@ bool Bluetooth_HC05::getRole(HC05_Role &role, unsigned long timeout)
 
 bool Bluetooth_HC05::setRole(HC05_Role role, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char role_str[10] = { role, 0 };
-  snprintf(role_str, sizeof(role_str), "%d", role);
+  PGM_STRING(format, "%d");
+  snprintf(role_str, sizeof(role_str), format, role);
   
   PGM_STRING(command, "ROLE=");
-  writeCommand(command, role_str);
-  
-  return readOperationResult();
+  return simpleCommand(command, role_str, timeout);
 }
 
 
@@ -302,16 +281,12 @@ bool Bluetooth_HC05::getDeviceClass(uint32_t &device_class, unsigned long timeou
 
 bool Bluetooth_HC05::setDeviceClass(uint32_t device_class, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char class_str[10];
   PGM_STRING(format, "%lx");
   snprintf(class_str, sizeof(class_str), format, device_class);
   
   PGM_STRING(command, "CLASS=");
-  writeCommand(command, class_str);
-  
-  return readOperationResult();
+  return simpleCommand(command, class_str, timeout);
 }
 
 
@@ -346,16 +321,12 @@ bool Bluetooth_HC05::getInquiryAccessCode(uint32_t &iac, unsigned long timeout)
 
 bool Bluetooth_HC05::setInquiryAccessCode(uint32_t iac, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char iac_str[10];
   PGM_STRING(format, "%lx");
   snprintf(iac_str, sizeof(iac_str), format, iac);
   
   PGM_STRING(command, "IAC=");
-  writeCommand(command, iac_str);
-  
-  return readOperationResult();
+  return simpleCommand(command, iac_str, timeout);
 }
 
 
@@ -403,8 +374,6 @@ bool Bluetooth_HC05::getInquiryMode(HC05_InquiryMode &inq_mode,
 bool Bluetooth_HC05::setInquiryMode(HC05_InquiryMode inq_mode,
   int16_t max_devices, uint8_t max_duration, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char mode[20];
   /* Yeah, max_devices is signed 16-bit integer, but the module accepts
    * an unsigned 16-bit integer while actually interpreting it as signed.
@@ -416,9 +385,7 @@ bool Bluetooth_HC05::setInquiryMode(HC05_InquiryMode inq_mode,
   snprintf(mode, sizeof(mode), format, inq_mode, (uint16_t)max_devices, max_duration);
   
   PGM_STRING(command, "INQM=");
-  writeCommand(command, mode);
-  
-  return readOperationResult();
+  return simpleCommand(command, mode, timeout);
 }
 
 
@@ -461,18 +428,8 @@ bool Bluetooth_HC05::getPassword(char *buffer, unsigned long timeout)
 
 bool Bluetooth_HC05::setPassword(const char *password, unsigned long timeout)
 {
-  startOperation(timeout);
-  
-  if (!password)
-  {
-    m_errorCode = HC05_FAIL;
-    return false;
-  }
-  
   PGM_STRING(command, "PSWD=");
-  writeCommand(command, password);
-  
-  return readOperationResult();
+  return simpleCommand(command, password, timeout);
 }
 
 
@@ -518,11 +475,9 @@ bool Bluetooth_HC05::getSerialMode(uint32_t &speed, uint8_t &stop_bits,
 }
 
 
-bool Bluetooth_HC05::setSerialMode(uint32_t speed, uint8_t stop_bits,
-  HC05_Parity parity, unsigned long timeout)
+bool Bluetooth_HC05::setSerialMode(uint32_t speed,
+  uint8_t stop_bits, HC05_Parity parity, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   stop_bits -= 1; // 0: 1 stop bit, 1: 2 stop bits, any other are not allowed
   
   char mode_str[20];
@@ -530,9 +485,7 @@ bool Bluetooth_HC05::setSerialMode(uint32_t speed, uint8_t stop_bits,
   snprintf(mode_str, sizeof(mode_str), format, speed, stop_bits, parity);
   
   PGM_STRING(command, "UART=");
-  writeCommand(command, mode_str);
-  
-  return readOperationResult();
+  return simpleCommand(command, mode_str, timeout);
 }
 
 
@@ -564,16 +517,12 @@ bool Bluetooth_HC05::getConnectionMode(
 bool Bluetooth_HC05::setConnectionMode(
   HC05_Connection connection_mode, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char mode_str[20];
   PGM_STRING(format, "%u");
   snprintf(mode_str, sizeof(mode_str), format, connection_mode);
   
   PGM_STRING(command, "CMODE=");
-  writeCommand(command, mode_str);
-  
-  return readOperationResult();
+  return simpleCommand(command, mode_str, timeout);
 }
 
 
@@ -628,33 +577,25 @@ bool Bluetooth_HC05::getLeds(bool &led_status,
 bool Bluetooth_HC05::setLeds(bool led_status,
   bool led_connection, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char leds_str[10];
   PGM_STRING(format, "%d,%d");
   snprintf(leds_str, sizeof(leds_str), format,
     (led_status ? 1 : 0), (led_connection ? 1 : 0));
     
   PGM_STRING(command, "POLAR=");
-  writeCommand(command, leds_str);
-  
-  return readOperationResult();
+  return simpleCommand(command, leds_str, timeout);
 }
 
 
 bool Bluetooth_HC05::setPortState(uint8_t port_num,
   uint8_t port_state, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char state_str[10];
   PGM_STRING(format, "%u,%u");
   snprintf(state_str, sizeof(state_str), format, port_num, port_state);
   
   PGM_STRING(command, "PIO=");
-  writeCommand(command, state_str);
-  
-  return readOperationResult();
+  return simpleCommand(command, state_str, timeout);
 }
 
 
@@ -686,16 +627,12 @@ bool Bluetooth_HC05::getMultiplePorts(uint16_t &port_states, unsigned long timeo
 
 bool Bluetooth_HC05::setMultiplePorts(uint16_t port_states, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char states_str[10];
   PGM_STRING(format, "%x");
   snprintf(states_str, sizeof(states_str), format, port_states);
   
   PGM_STRING(command, "MPIO=");
-  writeCommand(command, states_str);
-  
-  return readOperationResult();
+  return simpleCommand(command, states_str, timeout);
 }
 
 
@@ -747,17 +684,13 @@ bool Bluetooth_HC05::setInquiryAndPagingParams(
   uint16_t inquiry_interval, uint16_t inquiry_duration,
   uint16_t paging_interval, uint16_t paging_duration, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char params_str[40];
   PGM_STRING(format, "%u,%u,%u,%u");
   snprintf(params_str, sizeof(params_str), format,
     inquiry_interval, inquiry_duration, paging_interval, paging_duration);
   
   PGM_STRING(command, "IPSCAN=");
-  writeCommand(command, params_str);
-  
-  return readOperationResult();
+  return simpleCommand(command, params_str, timeout);
 }
 
 
@@ -807,39 +740,27 @@ bool Bluetooth_HC05::getSniffParams(uint16_t &max_time, uint16_t &min_time,
 bool Bluetooth_HC05::setSniffParams(uint16_t max_time, uint16_t min_time,
   uint16_t retry_interval, uint16_t sniff_timeout, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char params_str[40];
   PGM_STRING(format, "%u,%u,%u,%u");
   snprintf(params_str, sizeof(params_str), format,
     max_time, min_time, retry_interval, sniff_timeout);
   
   PGM_STRING(command, "SNIFF=");
-  writeCommand(command, params_str);
-  
-  return readOperationResult();
+  return simpleCommand(command, params_str, timeout);
 }
 
 
 bool Bluetooth_HC05::enterSniffMode(unsigned long timeout)
 {
-  startOperation(timeout);
-  
   PGM_STRING(command, "ENSNIFF");
-  writeCommand(command);
-  
-  return readOperationResult();
+  return simpleCommand(command, 0, timeout);
 }
 
 
 bool Bluetooth_HC05::exitSniffMode(unsigned long timeout)
 {
-  startOperation(timeout);
-  
   PGM_STRING(command, "EXSNIFF");
-  writeCommand(command);
-  
-  return readOperationResult();
+  return simpleCommand(command, 0, timeout);
 }
 
 
@@ -877,16 +798,12 @@ bool Bluetooth_HC05::getSecurityAndEncryption(HC05_Security &security,
 bool Bluetooth_HC05::setSecurityAndEncryption(HC05_Security security,
   HC05_Encryption encryption, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char params_str[10];
   PGM_STRING(format, "%u,%u");
   snprintf(params_str, sizeof(params_str), format, security, encryption);
   
   PGM_STRING(command, "SENM=");
-  writeCommand(command, params_str);
-  
-  return readOperationResult();
+  return simpleCommand(command, params_str, timeout);
 }
 
 
@@ -900,12 +817,8 @@ bool Bluetooth_HC05::deleteDeviceFromList(
 
 bool Bluetooth_HC05::deleteAllDevicesFromList(unsigned long timeout)
 {
-  startOperation(timeout);
-  
   PGM_STRING(command, "RMAAD");
-  writeCommand(command);
-  
-  return readOperationResult();
+  return simpleCommand(command, 0, timeout);
 }
 
 
@@ -1004,12 +917,8 @@ bool Bluetooth_HC05::getState(HC05_State &state, unsigned long timeout)
 
 bool Bluetooth_HC05::initSerialPortProfile(unsigned long timeout)
 {
-  startOperation(timeout);
-  
   PGM_STRING(command, "INIT");
-  writeCommand(command);
-  
-  return readOperationResult();
+  return simpleCommand(command, 0, timeout);
 }
 
 
@@ -1041,12 +950,8 @@ bool Bluetooth_HC05::inquire(InquiryCallback callback, unsigned long timeout)
 
 bool Bluetooth_HC05::cancelInquiry(unsigned long timeout)
 {
-  startOperation(timeout);
-  
   PGM_STRING(command, "INQC");
-  writeCommand(command);
-  
-  return readOperationResult();
+  return simpleCommand(command, 0, timeout);
 }
 
 
@@ -1088,8 +993,6 @@ bool Bluetooth_HC05::readAddressWithCommand(BluetoothAddress &address,
 bool Bluetooth_HC05::writeAddressWithCommand(const BluetoothAddress &address,
   const char *command_name, unsigned long timeout)
 {
-  startOperation(timeout);
-  
   char command[20];
   PGM_STRING(format, "%s=");
   snprintf(command, sizeof(command), format, command_name);
@@ -1097,7 +1000,15 @@ bool Bluetooth_HC05::writeAddressWithCommand(const BluetoothAddress &address,
   char address_str[BLUETOOTH_ADDRESS_BUFSIZE];
   printBluetoothAddress(address_str, address, ',');
   
-  writeCommand(command, address_str);
+  return simpleCommand(command, address_str, timeout);
+}
+
+
+bool Bluetooth_HC05::simpleCommand(
+  const char *command, const char *arg, unsigned long timeout)
+{
+  startOperation(timeout);
+  writeCommand(command, arg);
   return readOperationResult();
 }
 
