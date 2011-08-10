@@ -830,7 +830,7 @@ bool Bluetooth_HC05::findDeviceInList(
 }
 
 
-bool Bluetooth_HC05::deviceCountInList(uint8_t &device_count, unsigned long timeout)
+bool Bluetooth_HC05::countDevicesInList(uint8_t &device_count, unsigned long timeout)
 {
   startOperation(timeout);
   

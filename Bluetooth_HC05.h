@@ -161,7 +161,7 @@ public:
   bool deleteAllDevicesFromList(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool findDeviceInList(const BluetoothAddress &address,
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
-  bool deviceCountInList(uint8_t &device_count,
+  bool countDevicesInList(uint8_t &device_count,
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool getLastAuthenticatedDevice(BluetoothAddress &address,
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
