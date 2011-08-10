@@ -24,6 +24,19 @@ enum HC05_Security { HC05_SEC_OFF, HC05_SEC_NON_SECURE,
   HC05_SEC_SERVICE, HC05_SEC_LINK, HC05_SEC_UNKNOWN };
 enum HC05_Encryption { HC05_ENC_OFF, HC05_ENC_PTP, HC05_ENC_PTP_BROADCAST };
 
+enum HC05_State
+{
+  HC05_INITIALIZED,
+  HC05_READY,
+  HC05_PAIRABLE,
+  HC05_PAIRED,
+  HC05_INQUIRING,
+  HC05_CONNECTING,
+  HC05_CONNECTED,
+  HC05_DISCONNECTED,
+  HC05_UNKNOWN
+};
+
 enum HC05_Result
 {
   HC05_OK = 0xFF,
@@ -57,9 +70,7 @@ enum HC05_Result
   HC05_ERR_INQUIRY_TIMEOUT_TOO_LONG = 0x19,
   HC05_ERR_NO_BLUETOOTH_ADDRESS = 0x1A,
   HC05_ERR_INVALID_SECURITY_MODE = 0x1B,
-  HC05_ERR_INVALID_ENCRYPTION_MODE = 0x1C,
-  
-  
+  HC05_ERR_INVALID_ENCRYPTION_MODE = 0x1C
 };
 
 typedef uint8_t BluetoothAddress[6];
@@ -144,6 +155,8 @@ public:
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool getLastAuthenticatedDevice(BluetoothAddress &address,
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool getState(HC05_State &state, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool initSerialPortProfile(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   
   static bool parseBluetoothAddress(BluetoothAddress &address, const char *addr_str);
   static void printBluetoothAddress(char *addr_str,
@@ -166,8 +179,8 @@ private:
   bool readOperationResult();
   void writeCommand(const char *command, const char *arg = 0);
   size_t readLine(char *buffer, size_t buffer_size);
-  char *readResponseWithPrefix(char *buffer, size_t buffer_size, char *prefix);
-  static char *skipPrefix(char *str, size_t str_length, char *prefix);
+  char *readResponseWithPrefix(char *buffer, size_t buffer_size, const char *prefix);
+  static char *skipPrefix(char *str, size_t str_length, const char *prefix);
   
   void startOperation(unsigned long timeout);
   bool isOperationTimedOut() const;
