@@ -9,10 +9,13 @@
 enum
 {
   HC05_DEFAULT_TIMEOUT = 200,
+  HC05_INQUIRY_DEFAULT_TIMEOUT = 10000,
   HC05_PASSWORD_MAXLEN = 16,
   HC05_PASSWORD_BUFSIZE = HC05_PASSWORD_MAXLEN + 1,
+  HC05_NAME_MAXLEN = 32,
+  HC05_NAME_BUFSIZE = HC05_NAME_MAXLEN + 1,
   BLUETOOTH_ADDRESS_MAXLEN = 14,
-  BLUETOOTH_ADDRESS_BUFSIZE = BLUETOOTH_ADDRESS_MAXLEN + 1
+  BLUETOOTH_ADDRESS_BUFSIZE = BLUETOOTH_ADDRESS_MAXLEN + 1,
 };
 
 enum HC05_Mode { HC05_MODE_DATA = 0, HC05_MODE_COMMAND = 1 };
@@ -41,6 +44,7 @@ enum HC05_Result
 {
   HC05_OK = 0xFF,
   HC05_FAIL = 0xFE,
+  HC05_ERR_TIMEOUT = 0xFD,
   
   HC05_ERR_AT_COMMAND = 0x00,
   HC05_ERR_DEFAULT_RESULT = 0x01,
@@ -95,8 +99,7 @@ public:
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool restoreDefaults(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool getAddress(BluetoothAddress &address, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
-  bool getName(char *buffer, size_t buffer_size,
-    unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  bool getName(char *buffer, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool setName(const char *name, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool getRemoteDeviceName(char *buffer, size_t buffer_size,
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
@@ -158,9 +161,14 @@ public:
   bool getState(HC05_State &state, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool initSerialPortProfile(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   
-  static bool parseBluetoothAddress(BluetoothAddress &address, const char *addr_str);
+  typedef void (*InquiryCallback)(const BluetoothAddress &address);
+  bool inquire(InquiryCallback callback, unsigned long timeout = HC05_INQUIRY_DEFAULT_TIMEOUT);
+  bool cancelInquiry(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
+  
+  static bool parseBluetoothAddress(BluetoothAddress &address,
+    const char *addr_str, char delimiter);
   static void printBluetoothAddress(char *addr_str,
-    const BluetoothAddress &address, char delimiter = ':');
+    const BluetoothAddress &address, char delimiter);
   
 private:
   HardwareSerial *m_uart;

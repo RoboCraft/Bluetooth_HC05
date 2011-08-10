@@ -11,7 +11,7 @@
   strcpy_P(name, name##_pgm);
 
 
-unsigned long htol(const char *str)
+unsigned long htoul(const char *str)
 {
   if (!str)
     return 0;
@@ -155,7 +155,7 @@ bool Bluetooth_HC05::getAddress(BluetoothAddress &address, unsigned long timeout
 }
 
 
-bool Bluetooth_HC05::getName(char *buffer, size_t buffer_size, unsigned long timeout)
+bool Bluetooth_HC05::getName(char *buffer, unsigned long timeout)
 {
   startOperation(timeout);
   
@@ -170,20 +170,19 @@ bool Bluetooth_HC05::getName(char *buffer, size_t buffer_size, unsigned long tim
   
   char response[40];
   PGM_STRING(response_pattern, "+NAME:");
-  char *name = readResponseWithPrefix(response, sizeof(response), response_pattern);
+  char *name_part = readResponseWithPrefix(response, sizeof(response), response_pattern);
   
   if (m_errorCode != HC05_OK)
     return false;
   
-  if (!name)
+  if (!name_part)
   {
     *buffer = 0;
     return readOperationResult() && false;
   }
   
-  size_t copy_size = min(strlen(name), buffer_size - 1);
-  memcpy(buffer, name, copy_size);
-  buffer[copy_size] = 0;
+  PGM_STRING(format, "%s");
+  snprintf(buffer, HC05_NAME_BUFSIZE, format, name_part);
   
   return readOperationResult();
 }
@@ -193,7 +192,7 @@ bool Bluetooth_HC05::setName(const char *name, unsigned long timeout)
 {
   startOperation(timeout);
   
-  if (!name || name[0] == 0)
+  if (!name)
     return false;
   
   PGM_STRING(command, "NAME=");
@@ -219,21 +218,19 @@ bool Bluetooth_HC05::getRemoteDeviceName(char *buffer,
   
   char response[40];
   PGM_STRING(response_pattern, "+RNAME:");
-  char *remote_name = readResponseWithPrefix(
-    response, sizeof(response), response_pattern);
+  char *name_part = readResponseWithPrefix(response, sizeof(response), response_pattern);
   
   if (m_errorCode != HC05_OK)
     return false;
   
-  if (!remote_name)
+  if (!name_part)
   {
     *buffer = 0;
     return readOperationResult() && false;
   }
   
-  size_t copy_size = min(strlen(remote_name), buffer_size - 1);
-  memcpy(buffer, remote_name, copy_size);
-  buffer[copy_size] = 0;
+  PGM_STRING(format, "%s");
+  snprintf(buffer, buffer_size, format, name_part);
   
   return readOperationResult();
 }
@@ -297,7 +294,7 @@ bool Bluetooth_HC05::getDeviceClass(uint32_t &device_class, unsigned long timeou
   if (!class_part)
     return readOperationResult() && false;
   
-  device_class = htol(class_part);
+  device_class = htoul(class_part);
   
   return readOperationResult();
 }
@@ -341,7 +338,7 @@ bool Bluetooth_HC05::getInquiryAccessCode(uint32_t &iac, unsigned long timeout)
   if (!iac_part)
     return readOperationResult() && false;
   
-  iac = htol(iac_part);
+  iac = htoul(iac_part);
   
   return readOperationResult();
 }
@@ -681,7 +678,7 @@ bool Bluetooth_HC05::getMultiplePorts(uint16_t &port_states, unsigned long timeo
   if (!states_part)
     return readOperationResult() && false;
   
-  port_states = htol(states_part);
+  port_states = htoul(states_part);
   
   return readOperationResult();
 }
@@ -1016,6 +1013,43 @@ bool Bluetooth_HC05::initSerialPortProfile(unsigned long timeout)
 }
 
 
+bool Bluetooth_HC05::inquire(InquiryCallback callback, unsigned long timeout)
+{
+  startOperation(timeout);
+  
+  PGM_STRING(command, "INQ");
+  writeCommand(command);
+  
+  while (!isOperationTimedOut())
+  {
+    if (m_uart->peek() != '+')
+      break;
+    
+    char response[BLUETOOTH_ADDRESS_BUFSIZE + 10];
+    PGM_STRING(response_pattern, "+INQ:");
+    const char *address_part;
+    address_part = readResponseWithPrefix(response, sizeof(response), response_pattern);
+    
+    BluetoothAddress address;
+    parseBluetoothAddress(address, address_part, ':');
+    callback(address);
+  }
+  
+  return readOperationResult();
+}
+
+
+bool Bluetooth_HC05::cancelInquiry(unsigned long timeout)
+{
+  startOperation(timeout);
+  
+  PGM_STRING(command, "INQC");
+  writeCommand(command);
+  
+  return readOperationResult();
+}
+
+
 bool Bluetooth_HC05::readAddressWithCommand(BluetoothAddress &address,
   const char *command_name, unsigned long timeout)
 {
@@ -1036,15 +1070,15 @@ bool Bluetooth_HC05::readAddressWithCommand(BluetoothAddress &address,
   PGM_STRING(format, "+%s:");
   snprintf(response_pattern, sizeof(response_pattern), format, command_name);
   
-  char *addr_part = readResponseWithPrefix(response, sizeof(response), response_pattern);
+  char *address_part = readResponseWithPrefix(response, sizeof(response), response_pattern);
   
   if (m_errorCode != HC05_OK)
     return false;
 
-  if (!addr_part)
+  if (!address_part)
     return readOperationResult() && false;
   
-  if (!parseBluetoothAddress(address, addr_part))
+  if (!parseBluetoothAddress(address, address_part, ':'))
     return readOperationResult() && false;
   
   return readOperationResult();
@@ -1128,7 +1162,7 @@ size_t Bluetooth_HC05::readLine(char *buffer, size_t buffer_size)
   PGM_STRING(error_prefix, "ERROR:(");
   
   if (char *error_code_str = skipPrefix(buffer, buffer_size, error_prefix))
-    m_errorCode = static_cast<HC05_Result>(htol(error_code_str));
+    m_errorCode = static_cast<HC05_Result>(htoul(error_code_str));
   else if (strcmp(buffer, "FAIL") == 0)
     m_errorCode = HC05_FAIL;
 
@@ -1138,7 +1172,7 @@ size_t Bluetooth_HC05::readLine(char *buffer, size_t buffer_size)
 
 
 bool Bluetooth_HC05::parseBluetoothAddress(
-  BluetoothAddress &address, const char *address_str)
+  BluetoothAddress &address, const char *address_str, char delimiter)
 {
   /* Address should look like "+ADDR:<NAP>:<UAP>:<LAP>",
    * where actual address will look like "1234:56:abcdef".
@@ -1148,20 +1182,20 @@ bool Bluetooth_HC05::parseBluetoothAddress(
   
   char *digits_ptr = const_cast<char*>(address_str);
   uint8_t NAP[2];
-  *((uint16_t*)NAP) = htol(digits_ptr);
-  digits_ptr = strchrnul(digits_ptr, ':');
+  *((uint16_t*)NAP) = htoul(digits_ptr);
+  digits_ptr = strchrnul(digits_ptr, delimiter);
   
-  if (*digits_ptr != ':')
+  if (*digits_ptr != delimiter)
     return false;
   
-  uint8_t UAP = htol(++digits_ptr);
-  digits_ptr = strchrnul(digits_ptr, ':');
+  uint8_t UAP = htoul(++digits_ptr);
+  digits_ptr = strchrnul(digits_ptr, delimiter);
   
-  if (*digits_ptr != ':')
+  if (*digits_ptr != delimiter)
     return false;
   
   uint8_t LAP[4];
-  *((uint32_t*)LAP) = htol(++digits_ptr);
+  *((uint32_t*)LAP) = htoul(++digits_ptr);
   
   address[0] = NAP[1];
   address[1] = NAP[0];
