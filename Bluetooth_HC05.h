@@ -86,9 +86,6 @@ enum HC05_Result
 
 typedef uint8_t BluetoothAddress[6];
 
-extern const float HC05_INQUIRY_QUANT; // 1.28
-
-
 class Bluetooth_HC05: public Print
 {
 public:
@@ -97,7 +94,7 @@ public:
   
   HC05_Result getLastError() const;
 
-  void begin(unsigned baud_rate = 9600, uint8_t reset_pin = 0xFF,
+  void begin(unsigned baud_rate = 38400, uint8_t reset_pin = 0xFF,
     uint8_t mode_pin = 0xFF, HC05_Mode mode = HC05_MODE_DATA);
   bool probe(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   void hardReset();
