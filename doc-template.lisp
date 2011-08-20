@@ -1,17 +1,23 @@
-(defmacro kw (arg)
+(defmacro keyword-style (arg)
   `(span :class "keyword" ,arg))
 
-(defmacro op (arg)
+(defmacro operator-style (arg)
   `(span :class "operator" ,arg))
 
-(defmacro const (arg)
+(defmacro const-style (arg)
   `(span :class "constant" ,arg))
 
-(defmacro num (arg)
+(defmacro num-style (arg)
   `(span :class "number" ,arg))
 
-(defmacro dtype (arg)
-  `(span :class "type" (b ,arg)))
+(defmacro type-style (arg)
+  `(span :class "type" ,arg))
+
+(defmacro method-style (arg)
+  `(span :class "method" ,arg))
+
+(defmacro warning-img ()
+  `(div :class "chinese-warning"))
 
 (defmacro line (&body body)
   `(progn ,@body (br)))
@@ -26,20 +32,25 @@
 (defconstant +indent+ "  ")
 (defmacro >> () `(format t +indent+))
 
-(defmacro link (address text)
+(defmacro hlink (address text)
   `(lml-format "<a href=\"~a\">~a</a>" ,address ,text))
 
-(defmacro link-from-pair (pair)
-  `(link (cdr ,pair) (car ,pair)))
+(defmacro hlink-from-pair (pair)
+  `(hlink (cdr ,pair) (car ,pair)))
+
+(defmacro description-with-link (description link-pair)
+ `(html-string
+    (lml-format ,description
+      (html-string (hlink-from-pair ,link-pair)))))
 
 (defmacro section (name &body body)
   `(h2 (a :name ,name ,@body)))
 
 (defmacro section-link (name prefix &body body)
-  `(line (lml-princ ,prefix) (link (string-concat "#" ,name) ,@body)))
+  `(line (lml-princ ,prefix) (hlink (string-concat "#" ,name) ,@body)))
 
 (defmacro const-description (name description)
- `(p (const ,name) (br) ,description))
+ `(p (const-style ,name) (br) ,description))
                
 (defmacro const-descriptions (&rest pairs)
  `(progn
@@ -48,13 +59,40 @@
 
 (defmacro enum-description (name description &body body)
  `(p(div :class "enum-description"
-    (line (dtype ,name))
+    (line (type-style ,name))
     (princ ,description)
     (blockquote
       (const-descriptions ,@body)))))
 
+(defmacro css (&body body)
+  `(with-output-to-string (css-output)
+    (cssexp:with-css-output (css-output)
+      ,@body)))
+
+(defmacro style (&rest args)
+  `(with style ,@args))
+
 (defmacro html-string (&body body)
  `(with-output-to-string (*html-output*) ,@body))
+
+;~ (defun load-as-string (filename)
+  ;~ (with-open-file (stream filename)
+    ;~ (let ((result (make-array 0 :element-type 'character))
+          ;~ (buf (make-array 4096 :element-type 'character)))
+      ;~ (loop with chars-read do
+        ;~ (setf chars-read (read-char-sequence buf stream))
+        ;~ (if (> chars-read 0)
+          ;~ (setf result (string-concat result (subseq buf 0 chars-read))))
+          ;~ (return result)))))
+
+(defun load-lines-concat (filename)
+  (with-open-file (stream filename)
+    (loop with result = (make-array 0 :element-type 'character)
+          with line do
+      (setf line (read-line stream nil))
+      (if (> (length line) 0)
+        (setf result (string-concat result line))
+        (return result)))))
 
 (constants
   (+xml-prologue-string+ "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
@@ -75,20 +113,25 @@
         (:.operator :color "#301010")
         (:.constant :color "#663300")
         (:.number :color "#007f00")
-        (:.type :color "#2b71fd")
-        (:div.enum-description
+        (:.type
+          :color "#2b71fd"
+          :font-weight "bold")
+        (:.method
+          :color "#555533"
+          :font-weight "bold"
+          :font-style "italic"
+          );:font-weight "bold")
+        (:.enum-description
           :border "2px solid #aaaaaa"
-          :padding "0.5em"))))
-  
-;~ (:blockquote
-  ;~ :margin "0em 0em"
-  ;~ :border-left "0.3em solid #BBBBBB"
-  ;~ :padding-left "0.5em"
-  ;~ )
+          :padding "0.5em"))
+        (format t ".chinese-warning { width:52px; height:34px;
+                  background: url(data:image/png;base64,~a); }"
+          (load-lines-concat "chinese_warning.png.base64"))
+        ))
 
   (body
     (h1 +top-header+)
-    (p +synopsis+)
+    (p (lml-format +synopsis+ (html-string(warning-img))))
     
     ;; Table of contents
     (section-link "datatypes" "1. " +datatypes-header+)
@@ -121,21 +164,23 @@
       ("HC05_INQUIRY_STANDARD" +HC05_INQUIRY_STANDARD-description+)
       ("HC05_INQUIRY_RSSI"
         (lml-format +HC05_INQUIRY_RSSI-description+
-           (html-string (link-from-pair +RSSI-wikipedia-link+)))))
+           (html-string (hlink-from-pair +RSSI-wikipedia-link+)))))
     
     (enum-description "HC05_Parity"
-        (html-string(lml-format +HC05_Parity-description+
-          (html-string (link-from-pair +parity-bit-wikipedia-link+))))
+      (description-with-link +HC05_Parity-description+ +parity-bit-wikipedia-link+)
       ("HC05_NO_PARITY" +HC05_NO_PARITY-description+)
       ("HC05_PARITY_ODD" +HC05_PARITY_ODD-description+)
       ("HC05_PARITY_EVEN" +HC05_PARITY_EVEN-description+))
     
     (enum-description "HC05_Connection" +HC05_Connection-description+
-      ("HC05_CONNECT_BOUND" +HC05_CONNECT_BOUND-description+)
+      ("HC05_CONNECT_BOUND"
+        (lml-format +HC05_CONNECT_BOUND-description+
+          (html-string (method-style +bind-method-name+))))
       ("HC05_CONNECT_ANY" +HC05_CONNECT_ANY-description+)
       ("HC05_CONNECT_SLAVE_LOOP" +HC05_CONNECT_SLAVE_LOOP-description+))
     
-    (enum-description "HC05_Security" +HC05_Security-description+
+    (enum-description "HC05_Security"
+      (description-with-link +HC05_Security-description+ +security-link+)
       ("HC05_SEC_OFF" +HC05_SEC_OFF-description+)
       ("HC05_SEC_NON_SECURE" +HC05_SEC_NON_SECURE-description+)
       ("HC05_SEC_SERVICE" +HC05_SEC_SERVICE-description+)
