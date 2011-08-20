@@ -24,11 +24,11 @@
   ;~ `(with-output-to-string (*html-output*)
     ;~ ,@body))
 ;~ 
-;~ (defmacro css (&body body)
-  ;~ `(with-output-to-string (css-output)
-    ;~ (cssexp:with-css-output (css-output)
-      ;~ ,@body)))
-    
+(defmacro css (&body body)
+  `(with-output-to-string (css-output)
+    (cssexp:with-css-output (css-output)
+      ,@body)))
+
 (defmacro style (&rest args)
   `(with style ,@args))
 
