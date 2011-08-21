@@ -10,8 +10,10 @@
     Почти все методы принимают в качестве последнего агрумента тайм-аут на чтение ответа
     от модуля (в миллисекундах). К класс Bluetooth_HC05 реализует интерфейс Print
     так что вы можете посылать данные, пользуясь методом print(),
-    как в объект класса Serial. В качестве источника информации был использован китайский
-    даташит с кучей ошибок и неясностей - такие места я буду обозначать специальным значком: ~a")
+    как в объект класса Serial. В качестве источника информации был использован
+    китайский даташит с кучей ошибок и неясностей - такие места я буду обозначать
+    специальным значком: ~a. Если вы видите этот значок в описании - значит, я
+    ничерта не понял.")
   
   (+table-of-contents-header+ "Оглавление")
   
@@ -66,8 +68,7 @@
     задаваемым методом ~a")
   (+HC05_CONNECT_ANY-description+ "Принимать соединения от любых устройств")
   (+HC05_CONNECT_SLAVE_LOOP-description+
-    "slave-loop. Это всё, что написали китайцы в даташите.
-    Понятия не имею, что они хотели этим сказать o_O")
+    "slave-loop?")
   
   ;~ 0----connect the module to the
   ;~ specified Bluetooth address.
@@ -93,12 +94,12 @@
   
   (+security-link+
     '("безопасности" . "http://www.palowireless.com/bluearticles/cc1_security1.asp"))
-  (+HC05_Security-description+ "Настройки ~a соединения")
-  (+HC05_SEC_OFF-description+ "Выключено? ~a")
+  (+HC05_Security-description+ "Настройки ~a")
+  (+HC05_SEC_OFF-description+ "Выключено?")
   (+HC05_SEC_NON_SECURE-description+ "Незащищённое соединение")
-  (+HC05_SEC_SERVICE-description+ "Защищённое на сервисном уровне")
-  (+HC05_SEC_LINK-description+ "Защищённое ф уровне")
-  (+HC05_SEC_UNKNOWN-description+ "Неизвестный режим? ~a")
+  (+HC05_SEC_SERVICE-description+ "Защита на сервисном уровне (service-level)")
+  (+HC05_SEC_LINK-description+ "Защита на уровне соединения (link-level)")
+  (+HC05_SEC_UNKNOWN-description+ "Неизвестный режим?")
     
   (+HC05_Encryption-description+ "")
   (+HC05_ENC_OFF-description+ "")

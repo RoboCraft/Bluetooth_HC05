@@ -16,8 +16,8 @@
 (defmacro method-style (arg)
   `(span :class "method" ,arg))
 
-(defmacro warning-img ()
-  `(div :class "chinese-warning"))
+(defmacro chinese-warning ()
+  `(span :class "chinese-warning" "狗屁"))
 
 (defmacro line (&body body)
   `(progn ,@body (br)))
@@ -123,15 +123,14 @@
           );:font-weight "bold")
         (:.enum-description
           :border "2px solid #aaaaaa"
-          :padding "0.5em"))
-        (format t ".chinese-warning { width:52px; height:34px;
-                  background: url(data:image/png;base64,~a); }"
-          (load-lines-concat "chinese_warning.png.base64"))
-        ))
+          :padding "0.5em")
+        (:.chinese-warning
+          :margin "5px 5px"
+          :border "2px solid #ff4400"))))
 
   (body
     (h1 +top-header+)
-    (p (lml-format +synopsis+ (html-string(warning-img))))
+    (p (lml-format +synopsis+ (html-string (chinese-warning))))
     
     ;; Table of contents
     (section-link "datatypes" "1. " +datatypes-header+)
@@ -177,15 +176,16 @@
         (lml-format +HC05_CONNECT_BOUND-description+
           (html-string (method-style +bind-method-name+))))
       ("HC05_CONNECT_ANY" +HC05_CONNECT_ANY-description+)
-      ("HC05_CONNECT_SLAVE_LOOP" +HC05_CONNECT_SLAVE_LOOP-description+))
+      ("HC05_CONNECT_SLAVE_LOOP" (span +HC05_CONNECT_SLAVE_LOOP-description+
+                                       (chinese-warning))))
     
     (enum-description "HC05_Security"
       (description-with-link +HC05_Security-description+ +security-link+)
-      ("HC05_SEC_OFF" +HC05_SEC_OFF-description+)
+      ("HC05_SEC_OFF" (span +HC05_SEC_OFF-description+ (chinese-warning)))
       ("HC05_SEC_NON_SECURE" +HC05_SEC_NON_SECURE-description+)
       ("HC05_SEC_SERVICE" +HC05_SEC_SERVICE-description+)
       ("HC05_SEC_LINK" +HC05_SEC_LINK-description+)
-      ("HC05_SEC_UNKNOWN" +HC05_SEC_UNKNOWN-description+))
+      ("HC05_SEC_UNKNOWN" (span +HC05_SEC_UNKNOWN-description+ (chinese-warning))))
     
     (enum-description "HC05_Encryption" +HC05_Encryption-description+
       ("HC05_ENC_OFF" +HC05_ENC_OFF-description+)
