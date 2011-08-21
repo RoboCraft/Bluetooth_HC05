@@ -79,10 +79,12 @@
   (+HC05_SEC_LINK-description+ "Защита на уровне соединения (link-level)")
   (+HC05_SEC_UNKNOWN-description+ "Неизвестный режим?")
 
-  (+HC05_Encryption-description+ "")
-  (+HC05_ENC_OFF-description+ "")
-  (+HC05_ENC_PTP-description+ "")
-  (+HC05_ENC_PTP_BROADCAST-description+ "")
+  (+packet-encryption-section+ "Packet Encryption")
+  (+HC05_Encryption-description+
+    "Настройки шифрования (см. статью по ~a, раздел ~a)")
+  (+HC05_ENC_OFF-description+ "Без шифрования")
+  (+HC05_ENC_PTP-description+ "Шифруется только трафик PTP (point-to-point)")
+  (+HC05_ENC_PTP_BROADCAST-description+ "Шифруется весь трафик")
 
   (+HC05_State-description+ "")
   (+HC05_INITIALIZED-description+ "")

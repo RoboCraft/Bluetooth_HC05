@@ -15,14 +15,14 @@ unsigned long htoul(const char *str)
 {
   if (!str)
     return 0;
-  
+
   long result = 0;
   char sign = *str;
 
   while (*str)
   {
     uint8_t value;
-    
+
     if (*str >= 'a' && *str <= 'f')
       value = (*str - 'a') + 10;
     else if (*str >= 'A' && *str <= 'F')
@@ -31,11 +31,11 @@ unsigned long htoul(const char *str)
       value = *str - '0';
     else
       break;
-    
+
     result = (result * 16) + value;
     ++str;
   }
-  
+
   return result;
 }
 
@@ -62,15 +62,15 @@ void Bluetooth_HC05::begin(unsigned baud_rate, uint8_t reset_pin,
   uint8_t mode_pin, HC05_Mode mode)
 {
   m_uart->begin(baud_rate);
-  
+
   m_resetPin = reset_pin;
   pinMode(m_resetPin, OUTPUT);
   digitalWrite(m_resetPin, HIGH);
-  
+
   m_modePin = mode_pin;
   pinMode(m_modePin, OUTPUT);
   digitalWrite(m_modePin, (mode == HC05_MODE_DATA ? LOW : HIGH));
-  
+
   hardReset();
 }
 
@@ -88,7 +88,7 @@ void Bluetooth_HC05::hardReset()
   digitalWrite(m_resetPin, LOW);
   delay(6);
   digitalWrite(m_resetPin, HIGH);
-  
+
   m_errorCode = HC05_OK;
 }
 
@@ -103,28 +103,28 @@ bool Bluetooth_HC05::softReset(unsigned long timeout)
 bool Bluetooth_HC05::getVersion(char *buffer, size_t buffer_size, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   if (!buffer || buffer_size <= 1)
     return false;
-  
+
   PGM_STRING(command, "VERSION?");
   writeCommand(command);
-  
+
   /* Response should look like "+VERSION:2.0-20100601" */
   char response[30];
   PGM_STRING(response_pattern, "+VERSION:");
   const char *version = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!version)
   {
     *buffer = 0;
     return readOperationResult() && false;
   }
-  
+
   snprintf(buffer, buffer_size, "%s", version);
   return readOperationResult();
 }
@@ -147,32 +147,32 @@ bool Bluetooth_HC05::getAddress(BluetoothAddress &address, unsigned long timeout
 bool Bluetooth_HC05::getName(char *buffer, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   if (!buffer)
   {
     m_errorCode = HC05_FAIL;
     return false;
   }
-  
+
   PGM_STRING(command, "NAME?");
   writeCommand(command);
-  
+
   char response[40];
   PGM_STRING(response_pattern, "+NAME:");
   char *name_part = readResponseWithPrefix(response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!name_part)
   {
     *buffer = 0;
     return readOperationResult() && false;
   }
-  
+
   PGM_STRING(format, "%s");
   snprintf(buffer, HC05_NAME_BUFSIZE, format, name_part);
-  
+
   return readOperationResult();
 }
 
@@ -188,32 +188,32 @@ bool Bluetooth_HC05::getRemoteDeviceName(char *buffer,
   size_t buffer_size, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   if (!buffer || !buffer_size)
   {
     m_errorCode = HC05_FAIL;
     return false;
   }
-  
+
   PGM_STRING(command, "RNAME?");
   writeCommand(command);
-  
+
   char response[40];
   PGM_STRING(response_pattern, "+RNAME:");
   char *name_part = readResponseWithPrefix(response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!name_part)
   {
     *buffer = 0;
     return readOperationResult() && false;
   }
-  
+
   PGM_STRING(format, "%s");
   snprintf(buffer, buffer_size, format, name_part);
-  
+
   return readOperationResult();
 }
 
@@ -221,23 +221,23 @@ bool Bluetooth_HC05::getRemoteDeviceName(char *buffer,
 bool Bluetooth_HC05::getRole(HC05_Role &role, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "ROLE?");
   writeCommand(command);
-  
+
   char response[20];
   PGM_STRING(response_pattern, "+ROLE:");
   const char *role_str = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!role_str)
     return readOperationResult() && false;
-  
+
   role = static_cast<HC05_Role>(atol(role_str));
-  
+
   return readOperationResult();
 }
 
@@ -247,7 +247,7 @@ bool Bluetooth_HC05::setRole(HC05_Role role, unsigned long timeout)
   char role_str[10] = { role, 0 };
   PGM_STRING(format, "%d");
   snprintf(role_str, sizeof(role_str), format, role);
-  
+
   PGM_STRING(command, "ROLE=");
   return simpleCommand(command, role_str, timeout);
 }
@@ -256,25 +256,25 @@ bool Bluetooth_HC05::setRole(HC05_Role role, unsigned long timeout)
 bool Bluetooth_HC05::getDeviceClass(uint32_t &device_class, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "CLASS?");
   writeCommand(command);
-  
+
   device_class = 0;
-  
+
   char response[40];
   PGM_STRING(response_pattern, "+CLASS:");
   const char *class_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!class_part)
     return readOperationResult() && false;
-  
+
   device_class = htoul(class_part);
-  
+
   return readOperationResult();
 }
 
@@ -284,7 +284,7 @@ bool Bluetooth_HC05::setDeviceClass(uint32_t device_class, unsigned long timeout
   char class_str[10];
   PGM_STRING(format, "%lx");
   snprintf(class_str, sizeof(class_str), format, device_class);
-  
+
   PGM_STRING(command, "CLASS=");
   return simpleCommand(command, class_str, timeout);
 }
@@ -293,28 +293,28 @@ bool Bluetooth_HC05::setDeviceClass(uint32_t device_class, unsigned long timeout
 bool Bluetooth_HC05::getInquiryAccessCode(uint32_t &iac, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "IAC?");
   writeCommand(command);
-  
+
   iac = 0;
-  
+
   if (isOperationTimedOut())
     return false;
-  
+
   char response[30];
   PGM_STRING(response_pattern, "+IAC:");
   const char *iac_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!iac_part)
     return readOperationResult() && false;
-  
+
   iac = htoul(iac_part);
-  
+
   return readOperationResult();
 }
 
@@ -324,7 +324,7 @@ bool Bluetooth_HC05::setInquiryAccessCode(uint32_t iac, unsigned long timeout)
   char iac_str[10];
   PGM_STRING(format, "%lx");
   snprintf(iac_str, sizeof(iac_str), format, iac);
-  
+
   PGM_STRING(command, "IAC=");
   return simpleCommand(command, iac_str, timeout);
 }
@@ -334,39 +334,39 @@ bool Bluetooth_HC05::getInquiryMode(HC05_InquiryMode &inq_mode,
   int16_t &max_devices, uint8_t &max_duration, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "INQM?");
   writeCommand(command);
-  
+
   inq_mode = HC05_INQUIRY_STANDARD;
   max_devices = 0;
   max_duration = 0;
-  
+
   char response[30];
   PGM_STRING(response_pattern, "+INQM:");
   char *mode_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-    
+
   if (!mode_part)
     return readOperationResult() && false;
-  
+
   inq_mode = static_cast<HC05_InquiryMode>(atol(mode_part));
   mode_part = strchrnul(mode_part, ',');
-  
+
   if (*mode_part != ',')
     return readOperationResult() && false;
-  
+
   max_devices = atol(++mode_part);
   mode_part = strchrnul(mode_part, ',');
-  
+
   if (*mode_part != ',')
     return readOperationResult() && false;
-  
+
   max_duration = atol(++mode_part);
-  
+
   return readOperationResult();
 }
 
@@ -383,7 +383,7 @@ bool Bluetooth_HC05::setInquiryMode(HC05_InquiryMode inq_mode,
    */
   PGM_STRING(format, "%d,%u,%u");
   snprintf(mode, sizeof(mode), format, inq_mode, (uint16_t)max_devices, max_duration);
-  
+
   PGM_STRING(command, "INQM=");
   return simpleCommand(command, mode, timeout);
 }
@@ -392,36 +392,36 @@ bool Bluetooth_HC05::setInquiryMode(HC05_InquiryMode inq_mode,
 bool Bluetooth_HC05::getPassword(char *buffer, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   if (!buffer)
   {
     m_errorCode = HC05_FAIL;
     return false;
   }
-  
+
   PGM_STRING(command, "PSWD?");
   writeCommand(command);
-  
+
   char response[HC05_PASSWORD_MAXLEN + 15];
   PGM_STRING(response_pattern, "+PSWD:");
   const char *password_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
   {
     *buffer = 0;
     return false;
   }
-  
+
   if (!password_part)
   {
     *buffer = 0;
     return readOperationResult() && false;
   }
-  
+
   PGM_STRING(format, "%s");
   snprintf(buffer, HC05_PASSWORD_BUFSIZE, format, password_part);
-  
+
   return readOperationResult();
 }
 
@@ -437,40 +437,40 @@ bool Bluetooth_HC05::getSerialMode(uint32_t &speed, uint8_t &stop_bits,
   HC05_Parity &parity, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "UART?");
   writeCommand(command);
-  
+
   char response[30];
   PGM_STRING(response_pattern, "+UART:");
   char *mode_str = readResponseWithPrefix(response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-    
+
   if (!mode_str)
     return readOperationResult() && false;
-    
+
   speed = atol(mode_str);
   mode_str = strchrnul(mode_str, ',');
-  
+
   if (*mode_str != ',')
   {
     m_errorCode = HC05_FAIL;
     return readOperationResult() && false;
   }
-  
+
   stop_bits = atol(++mode_str) + 1;
   mode_str = strchrnul(mode_str, ',');
-  
+
   if (*mode_str != ',')
   {
     m_errorCode = HC05_FAIL;
     return readOperationResult() && false;
   }
-  
+
   parity = static_cast<HC05_Parity>(atol(++mode_str));
-  
+
   return readOperationResult();
 }
 
@@ -479,11 +479,11 @@ bool Bluetooth_HC05::setSerialMode(uint32_t speed,
   uint8_t stop_bits, HC05_Parity parity, unsigned long timeout)
 {
   stop_bits -= 1; // 0: 1 stop bit, 1: 2 stop bits, any other are not allowed
-  
+
   char mode_str[20];
   PGM_STRING(format, "%lu,%u,%u");
   snprintf(mode_str, sizeof(mode_str), format, speed, stop_bits, parity);
-  
+
   PGM_STRING(command, "UART=");
   return simpleCommand(command, mode_str, timeout);
 }
@@ -493,23 +493,23 @@ bool Bluetooth_HC05::getConnectionMode(
   HC05_Connection &connection_mode, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "CMODE?");
   writeCommand(command);
-  
+
   char response[20];
   PGM_STRING(response_pattern, "+CMODE:");
   const char *mode_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-    
+
   if (!mode_part)
     return readOperationResult() && false;
-  
+
   connection_mode = static_cast<HC05_Connection>(atol(mode_part));
-  
+
   return readOperationResult();
 }
 
@@ -520,7 +520,7 @@ bool Bluetooth_HC05::setConnectionMode(
   char mode_str[20];
   PGM_STRING(format, "%u");
   snprintf(mode_str, sizeof(mode_str), format, connection_mode);
-  
+
   PGM_STRING(command, "CMODE=");
   return simpleCommand(command, mode_str, timeout);
 }
@@ -544,32 +544,32 @@ bool Bluetooth_HC05::getLeds(bool &led_status,
   bool &led_connection, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "POLAR?");
   writeCommand(command);
-  
+
   led_status = 0;
   led_connection = 0;
-  
+
   char response[30];
   PGM_STRING(response_pattern, "+POLAR:");
   char *status_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-    
+
   if (!status_part)
     return readOperationResult() && false;
-  
+
   led_status = atol(status_part);
   status_part = strchrnul(status_part, ',');
-  
+
   if (*status_part != ',')
     return readOperationResult() && false;
-  
+
   led_connection = atol(++status_part);
-  
+
   return readOperationResult();
 }
 
@@ -581,7 +581,7 @@ bool Bluetooth_HC05::setLeds(bool led_status,
   PGM_STRING(format, "%d,%d");
   snprintf(leds_str, sizeof(leds_str), format,
     (led_status ? 1 : 0), (led_connection ? 1 : 0));
-    
+
   PGM_STRING(command, "POLAR=");
   return simpleCommand(command, leds_str, timeout);
 }
@@ -593,7 +593,7 @@ bool Bluetooth_HC05::setPortState(uint8_t port_num,
   char state_str[10];
   PGM_STRING(format, "%u,%u");
   snprintf(state_str, sizeof(state_str), format, port_num, port_state);
-  
+
   PGM_STRING(command, "PIO=");
   return simpleCommand(command, state_str, timeout);
 }
@@ -602,25 +602,25 @@ bool Bluetooth_HC05::setPortState(uint8_t port_num,
 bool Bluetooth_HC05::getMultiplePorts(uint16_t &port_states, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "MPIO?");
   writeCommand(command);
-  
+
   port_states = 0;
-  
+
   char response[20];
   PGM_STRING(response_pattern, "+MPIO:");
   const char *states_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!states_part)
     return readOperationResult() && false;
-  
+
   port_states = htoul(states_part);
-  
+
   return readOperationResult();
 }
 
@@ -630,7 +630,7 @@ bool Bluetooth_HC05::setMultiplePorts(uint16_t port_states, unsigned long timeou
   char states_str[10];
   PGM_STRING(format, "%x");
   snprintf(states_str, sizeof(states_str), format, port_states);
-  
+
   PGM_STRING(command, "MPIO=");
   return simpleCommand(command, states_str, timeout);
 }
@@ -641,41 +641,41 @@ bool Bluetooth_HC05::getInquiryAndPagingParams(
   uint16_t &paging_interval, uint16_t &paging_duration, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "IPSCAN?");
   writeCommand(command);
-  
+
   char response[40];
   PGM_STRING(response_pattern, "+IPSCAN:");
   char *params_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!params_part)
     return readOperationResult() && false;
-  
+
   inquiry_interval = atol(params_part);
   params_part = strchrnul(params_part, ',');
-  
+
   if (*params_part != ',')
     return readOperationResult() && false;
-  
+
   inquiry_duration = atol(++params_part);
   params_part = strchrnul(params_part, ',');
-  
+
   if (*params_part != ',')
     return readOperationResult() && false;
-  
+
   paging_interval = atol(++params_part);
   params_part = strchrnul(params_part, ',');
-  
+
   if (*params_part != ',')
     return readOperationResult() && false;
-  
+
   paging_duration = atol(++params_part);
-  
+
   return readOperationResult();
 }
 
@@ -688,7 +688,7 @@ bool Bluetooth_HC05::setInquiryAndPagingParams(
   PGM_STRING(format, "%u,%u,%u,%u");
   snprintf(params_str, sizeof(params_str), format,
     inquiry_interval, inquiry_duration, paging_interval, paging_duration);
-  
+
   PGM_STRING(command, "IPSCAN=");
   return simpleCommand(command, params_str, timeout);
 }
@@ -698,41 +698,41 @@ bool Bluetooth_HC05::getSniffParams(uint16_t &max_time, uint16_t &min_time,
   uint16_t &retry_interval, uint16_t &sniff_timeout, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "SNIFF?");
   writeCommand(command);
-  
+
   char response[40];
   PGM_STRING(response_pattern, "+SNIFF:");
   char *params_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!params_part)
     return readOperationResult() && false;
-  
+
   max_time = atol(params_part);
   params_part = strchrnul(params_part, ',');
-  
+
   if (*params_part != ',')
     return readOperationResult() && false;
-  
+
   min_time = atol(++params_part);
   params_part = strchrnul(params_part, ',');
-  
+
   if (*params_part != ',')
     return readOperationResult() && false;
-  
+
   retry_interval = atol(++params_part);
   params_part = strchrnul(params_part, ',');
-  
+
   if (*params_part != ',')
     return readOperationResult() && false;
-  
+
   sniff_timeout = atol(++params_part);
-  
+
   return readOperationResult();
 }
 
@@ -744,7 +744,7 @@ bool Bluetooth_HC05::setSniffParams(uint16_t max_time, uint16_t min_time,
   PGM_STRING(format, "%u,%u,%u,%u");
   snprintf(params_str, sizeof(params_str), format,
     max_time, min_time, retry_interval, sniff_timeout);
-  
+
   PGM_STRING(command, "SNIFF=");
   return simpleCommand(command, params_str, timeout);
 }
@@ -768,29 +768,29 @@ bool Bluetooth_HC05::getSecurityAndEncryption(HC05_Security &security,
   HC05_Encryption &encryption, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "SENM?");
   writeCommand(command);
-  
+
   char response[20];
   PGM_STRING(response_pattern, "+SENM:");
   char *params_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!params_part)
     return readOperationResult() && false;
-  
+
   security = static_cast<HC05_Security>(atol(params_part));
   params_part = strchrnul(params_part, ',');
-  
+
   if (*params_part != ',')
     return readOperationResult() && false;
-  
+
   encryption = static_cast<HC05_Encryption>(atol(++params_part));
-  
+
   return readOperationResult();
 }
 
@@ -801,7 +801,7 @@ bool Bluetooth_HC05::setSecurityAndEncryption(HC05_Security security,
   char params_str[10];
   PGM_STRING(format, "%u,%u");
   snprintf(params_str, sizeof(params_str), format, security, encryption);
-  
+
   PGM_STRING(command, "SENM=");
   return simpleCommand(command, params_str, timeout);
 }
@@ -833,23 +833,23 @@ bool Bluetooth_HC05::findDeviceInList(
 bool Bluetooth_HC05::countDevicesInList(uint8_t &device_count, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "ADCN?");
   writeCommand(command);
-  
+
   char response[20];
   PGM_STRING(response_pattern, "+ADCN:");
   const char *count_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!count_part)
     return readOperationResult() && false;
-  
+
   device_count = atol(count_part);
-  
+
   return readOperationResult();
 }
 
@@ -865,23 +865,23 @@ bool Bluetooth_HC05::getLastAuthenticatedDevice(
 bool Bluetooth_HC05::getState(HC05_State &state, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "STATE?");
   writeCommand(command);
-  
+
   state = HC05_UNKNOWN;
-  
+
   char response[40];
   PGM_STRING(response_pattern, "+STATE:");
   const char *status_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
-  
+
   if (!status_part)
     return readOperationResult() && false;
-  
+
   PGM_STRING(INITIALIZED, "INITIALIZED");
   PGM_STRING(READY, "READY");
   PGM_STRING(PAIRABLE, "PAIRABLE");
@@ -891,7 +891,7 @@ bool Bluetooth_HC05::getState(HC05_State &state, unsigned long timeout)
   PGM_STRING(CONNECTED, "CONNECTED");
   PGM_STRING(DISCONNECTED, "DISCONNECTED");
   PGM_STRING(UNKNOWN, "UNKNOWN");
-  
+
   if (strcmp(status_part, INITIALIZED) == 0)
     state = HC05_INITIALIZED;
   else if (strcmp(status_part, READY) == 0)
@@ -910,7 +910,7 @@ bool Bluetooth_HC05::getState(HC05_State &state, unsigned long timeout)
     state = HC05_DISCONNECTED;
   else if (strcmp(status_part, UNKNOWN) == 0)
     state = HC05_UNKNOWN;
-  
+
   return readOperationResult();
 }
 
@@ -925,27 +925,27 @@ bool Bluetooth_HC05::initSerialPortProfile(unsigned long timeout)
 bool Bluetooth_HC05::inquire(InquiryCallback callback, unsigned long timeout)
 {
   startOperation(timeout);
-  
+
   PGM_STRING(command, "INQ");
   writeCommand(command);
-  
+
   while (!isOperationTimedOut())
   {
     if (m_uart->peek() != '+')
       break;
-    
+
     char response[HC05_ADDRESS_BUFSIZE + 10];
     PGM_STRING(response_pattern, "+INQ:");
     const char *address_part;
     address_part = readResponseWithPrefix(response, sizeof(response), response_pattern);
-    
+
     BluetoothAddress address;
     parseBluetoothAddress(address, address_part, ':');
-    
+
     if (callback)
       callback(address);
   }
-  
+
   return readOperationResult();
 }
 
@@ -961,11 +961,11 @@ bool Bluetooth_HC05::pair(const BluetoothAddress &address, unsigned long timeout
 {
   char params_str[HC05_ADDRESS_BUFSIZE + 15];
   int address_length = printBluetoothAddress(params_str, address, ',');
-  
+
   PGM_STRING(format, ",%lu");
   snprintf(params_str + address_length,
     sizeof(params_str) - address_length, format, timeout);
-  
+
   PGM_STRING(command, "PAIR");
   return simpleCommand(command, params_str, timeout);
 }
@@ -981,18 +981,18 @@ bool Bluetooth_HC05::disconnect(unsigned long timeout)
 {
   startOperation(timeout);
   writeCommand("DISC");
-  
+
   PGM_STRING(SUCCESS, "SUCCESS");
   PGM_STRING(LINK_LOSS, "LINK_LOSS");
   PGM_STRING(NO_SLC, "NO_SLC");
   PGM_STRING(TIMEOUT, "TIMEOUT");
   PGM_STRING(ERROR, "ERROR");
-  
+
   char response[20];
   PGM_STRING(response_pattern, "+DISC:");
   const char *status_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
-  
+
   if (strcmp(status_part, SUCCESS) == 0)
     m_errorCode = HC05_OK;
   else if (strcmp(status_part, LINK_LOSS) == 0)
@@ -1003,7 +1003,7 @@ bool Bluetooth_HC05::disconnect(unsigned long timeout)
     m_errorCode = HC05_ERR_DISCONNECT_TIMEOUT;
   else if (strcmp(status_part, ERROR) == 0)
     m_errorCode = HC05_ERR_DISCONNECT_ERROR;
-   
+
    return readOperationResult();
 }
 
@@ -1013,32 +1013,32 @@ bool Bluetooth_HC05::readAddressWithCommand(BluetoothAddress &address,
 {
   startOperation(timeout);
   memset(address, 0, sizeof(BluetoothAddress));
-  
+
   if (!command_name)
     return false;
-  
+
   writeCommand(command_name, "?");
-  
+
   /* Response should look like "+<command_name>:<NAP>:<UAP>:<LAP>",
    * where actual address will look like "1234:56:abcdef".
    */
   char response[HC05_ADDRESS_BUFSIZE + 20];
   char response_pattern[20];
-  
+
   PGM_STRING(format, "+%s:");
   snprintf(response_pattern, sizeof(response_pattern), format, command_name);
-  
+
   char *address_part = readResponseWithPrefix(response, sizeof(response), response_pattern);
-  
+
   if (m_errorCode != HC05_OK)
     return false;
 
   if (!address_part)
     return readOperationResult() && false;
-  
+
   if (!parseBluetoothAddress(address, address_part, ':'))
     return readOperationResult() && false;
-  
+
   return readOperationResult();
 }
 
@@ -1049,10 +1049,10 @@ bool Bluetooth_HC05::writeAddressWithCommand(const BluetoothAddress &address,
   char command[20];
   PGM_STRING(format, "%s=");
   snprintf(command, sizeof(command), format, command_name);
-  
+
   char address_str[HC05_ADDRESS_BUFSIZE];
   printBluetoothAddress(address_str, address, ',');
-  
+
   return simpleCommand(command, address_str, timeout);
 }
 
@@ -1070,7 +1070,7 @@ bool Bluetooth_HC05::readOperationResult()
 {
   char response[15];
   readLine(response, sizeof(response));
-  
+
   PGM_STRING(OK, "OK");
   return strcmp(response, OK) == 0;
 }
@@ -1080,16 +1080,16 @@ void Bluetooth_HC05::writeCommand(const char *command, const char *arg)
 {
   PGM_STRING(AT, "AT");
   m_uart->print(AT);
-  
+
   if (command && command[0] != 0)
   {
     m_uart->write('+');
     m_uart->print(command);
   }
-  
+
   if (arg && arg[0] != 0)
     m_uart->print(arg);
-  
+
   PGM_STRING(EOL, "\r\n");
   m_uart->print(EOL);
 }
@@ -1110,21 +1110,21 @@ size_t Bluetooth_HC05::readLine(char *buffer, size_t buffer_size)
       if (isOperationTimedOut())
         goto EXIT_LOOP;
     }
-    
+
     *p++ = m_uart->read();
     continue;
-    
+
   EXIT_LOOP:
     break;
   }
 
   if (p[-1] == '\n' && p[-2] == '\r')
     p -= 2;
-  
+
   *p = 0;
-  
+
   PGM_STRING(error_prefix, "ERROR:(");
-  
+
   if (char *error_code_str = skipPrefix(buffer, buffer_size, error_prefix))
     m_errorCode = static_cast<HC05_Result>(htoul(error_code_str));
   else if (strcmp(buffer, "FAIL") == 0)
@@ -1143,31 +1143,31 @@ bool Bluetooth_HC05::parseBluetoothAddress(
    */
   if (!address || !address_str)
     return false;
-  
+
   char *digits_ptr = const_cast<char*>(address_str);
   uint8_t NAP[2];
   *((uint16_t*)NAP) = htoul(digits_ptr);
   digits_ptr = strchrnul(digits_ptr, delimiter);
-  
+
   if (*digits_ptr != delimiter)
     return false;
-  
+
   uint8_t UAP = htoul(++digits_ptr);
   digits_ptr = strchrnul(digits_ptr, delimiter);
-  
+
   if (*digits_ptr != delimiter)
     return false;
-  
+
   uint8_t LAP[4];
   *((uint32_t*)LAP) = htoul(++digits_ptr);
-  
+
   address[0] = NAP[1];
   address[1] = NAP[0];
   address[2] = UAP;
   address[3] = LAP[2];
   address[4] = LAP[1];
   address[5] = LAP[0];
-  
+
   return true;
 }
 
@@ -1177,26 +1177,26 @@ int Bluetooth_HC05::printBluetoothAddress(char *address_str,
 {
   if (!address || !address_str)
     return 0;
-    
+
   uint8_t NAP[2];
   NAP[0] = address[1];
   NAP[1] = address[0];
-  
+
   uint8_t UAP = address[2];
-  
+
   uint8_t LAP[4];
   LAP[0] = address[5];
   LAP[1] = address[4];
   LAP[2] = address[3];
   LAP[3] = 0;
-  
+
   PGM_STRING(format, "%x%c%x%c%lx");
-  
+
   int written = snprintf(address_str, HC05_ADDRESS_BUFSIZE, format,
     *reinterpret_cast<const uint16_t*>(NAP),
     delimiter, UAP, delimiter,
     *reinterpret_cast<const uint32_t*>(LAP));
-  
+
   return written;
 }
 
@@ -1206,10 +1206,10 @@ char *Bluetooth_HC05::readResponseWithPrefix(
 {
   if (!buffer || buffer_size <= 1)
     return 0;
-  
+
   size_t response_length = readLine(buffer, buffer_size);
   char *postfix = skipPrefix(buffer, response_length, prefix);
-  
+
   if (!postfix)
     *buffer = 0;
 
@@ -1221,12 +1221,12 @@ char *Bluetooth_HC05::skipPrefix(char *str, size_t str_length, const char *prefi
 {
   if (!str || str_length == 0 || !prefix)
     return 0;
-  
+
   size_t prefix_length = strlen(prefix);
-  
+
   if (str_length >= prefix_length && strncmp(str, prefix, prefix_length) == 0)
     return str + prefix_length;
-  
+
   return 0;
 }
 
@@ -1249,12 +1249,12 @@ unsigned long Bluetooth_HC05::operationDuration() const
 {
   unsigned long current_ticks = millis(),
                 elapsed_ticks;
-      
+
   if (current_ticks >= m_ticksAtStart)
     elapsed_ticks = current_ticks - m_ticksAtStart;
   else
     elapsed_ticks = (ULONG_MAX - m_ticksAtStart) + current_ticks;
-  
+
   return elapsed_ticks;
 }
 

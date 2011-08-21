@@ -168,7 +168,11 @@
       ("HC05_SEC_LINK" +HC05_SEC_LINK-description+)
       ("HC05_SEC_UNKNOWN" (span +HC05_SEC_UNKNOWN-description+ (chinese-warning))))
 
-    (enum-description "HC05_Encryption" +HC05_Encryption-description+
+    (enum-description "HC05_Encryption"
+      (html-string
+        (lml-format +HC05_Encryption-description+
+          (html-string (hlink-from-pair +security-link+))
+          (html-string (b +packet-encryption-section+))))
       ("HC05_ENC_OFF" +HC05_ENC_OFF-description+)
       ("HC05_ENC_PTP" +HC05_ENC_PTP-description+)
       ("HC05_ENC_PTP_BROADCAST" +HC05_ENC_PTP_BROADCAST-description+))

@@ -47,12 +47,12 @@ enum HC05_Result
   HC05_FAIL = 0xFE,
   HC05_ERR_TIMEOUT = 0xFD,
   HC05_ERR_ARGUMENT = 0xFC,
-  
+
   HC05_ERR_DISCONNECT_LINK_LOSS = 0xFB,
   HC05_ERR_DISCONNECT_NO_SLC = 0xFA,
   HC05_ERR_DISCONNECT_TIMEOUT = 0xF9,
   HC05_ERR_DISCONNECT_ERROR = 0xF8,
-  
+
   HC05_ERR_AT_COMMAND = 0x00,
   HC05_ERR_DEFAULT_RESULT = 0x01,
   HC05_ERR_PSKEY_WRITE = 0x02,
@@ -91,7 +91,7 @@ class Bluetooth_HC05: public Print
 public:
   Bluetooth_HC05(HardwareSerial &serial = Serial);
   ~Bluetooth_HC05();
-  
+
   HC05_Result getLastError() const;
 
   void begin(unsigned baud_rate = 38400, uint8_t reset_pin = 0xFF,
@@ -164,29 +164,29 @@ public:
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool getState(HC05_State &state, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool initSerialPortProfile(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
-  
+
   typedef void (*InquiryCallback)(const BluetoothAddress &address);
-  
+
   bool inquire(InquiryCallback callback, unsigned long timeout = HC05_INQUIRY_DEFAULT_TIMEOUT);
   bool cancelInquiry(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool pair(const BluetoothAddress &address, unsigned long timeout = HC05_PAIRING_DEFAULT_TIMEOUT);
   bool connect(const BluetoothAddress &address, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool disconnect(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
-  
+
   static bool parseBluetoothAddress(BluetoothAddress &address,
     const char *address_str, char delimiter);
   static int printBluetoothAddress(char *address_str,
     const BluetoothAddress &address, char delimiter);
-  
+
 private:
   HardwareSerial *m_uart;
   unsigned long m_timeout;
-  unsigned long m_ticksAtStart; 
+  unsigned long m_ticksAtStart;
 
   uint8_t m_modePin;
   uint8_t m_resetPin;
   HC05_Result m_errorCode;
-  
+
   bool readAddressWithCommand(BluetoothAddress &address,
     const char *command_name, unsigned long timeout);
   bool writeAddressWithCommand(const BluetoothAddress &address,
@@ -198,11 +198,11 @@ private:
   size_t readLine(char *buffer, size_t buffer_size);
   char *readResponseWithPrefix(char *buffer, size_t buffer_size, const char *prefix);
   static char *skipPrefix(char *str, size_t str_length, const char *prefix);
-  
+
   void startOperation(unsigned long timeout);
   bool isOperationTimedOut() const;
   unsigned long operationDuration() const;
-  
+
   virtual void write(uint8_t data);
 };
 
