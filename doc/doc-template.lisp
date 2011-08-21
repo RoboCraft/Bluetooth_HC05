@@ -179,11 +179,11 @@
 
     (enum-description "HC05_State" +HC05_State-description+
       ("HC05_INITIALIZED" +HC05_INITIALIZED-description+)
-      ("HC05_READY" +HC05_READY-description+)
+      ("HC05_READY" (span +HC05_READY-description+ (chinese-warning)))
       ("HC05_PAIRABLE" +HC05_PAIRABLE-description+)
       ("HC05_PAIRED" +HC05_PAIRED-description+)
       ("HC05_INQUIRING" +HC05_INQUIRING-description+)
       ("HC05_CONNECTING" +HC05_CONNECTING-description+)
       ("HC05_CONNECTED" +HC05_CONNECTED-description+)
       ("HC05_DISCONNECTED" +HC05_DISCONNECTED-description+)
-      ("HC05_UNKNOWN" +HC05_UNKNOWN-description+))))
+      ("HC05_UNKNOWN" (span +HC05_UNKNOWN-description+ (chinese-warning))))))
