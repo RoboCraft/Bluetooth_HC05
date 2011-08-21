@@ -51,7 +51,7 @@
 
 (defmacro const-description (name description)
  `(p (const-style ,name) (br) ,description))
-               
+
 (defmacro const-descriptions (&rest pairs)
  `(progn
   ,@(loop for pair in pairs collecting
@@ -75,26 +75,7 @@
 (defmacro html-string (&body body)
  `(with-output-to-string (*html-output*) ,@body))
 
-;~ (defun load-as-string (filename)
-  ;~ (with-open-file (stream filename)
-    ;~ (let ((result (make-array 0 :element-type 'character))
-          ;~ (buf (make-array 4096 :element-type 'character)))
-      ;~ (loop with chars-read do
-        ;~ (setf chars-read (read-char-sequence buf stream))
-        ;~ (if (> chars-read 0)
-          ;~ (setf result (string-concat result (subseq buf 0 chars-read))))
-          ;~ (return result)))))
-
-(defun load-lines-concat (filename)
-  (with-open-file (stream filename)
-    (loop with result = (make-array 0 :element-type 'character)
-          with line do
-      (setf line (read-line stream nil))
-      (if (> (length line) 0)
-        (setf result (string-concat result line))
-        (return result)))))
-
-(constants
+(defconstants
   (+xml-prologue-string+ "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
   (+xhtml-prologue-string+ "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml10-strict.dtd\">"))
 
@@ -104,7 +85,7 @@
   (head
     (title +title+)
     (meta :http-equiv "Content-Type" :content "text/html" :charset "utf-8")
-    
+
     (style :type "text/css"
       (cssexp:with-css-output (*standard-output*)
         (:.keyword
@@ -131,14 +112,14 @@
   (body
     (h1 +top-header+)
     (p (lml-format +synopsis+ (html-string (chinese-warning))))
-    
+
     ;; Table of contents
     (section-link "datatypes" "1. " +datatypes-header+)
     (section-link "constants" "2. " +constants-header+)
-    
+
     (section "datatypes" "1. " +datatypes-header+)
     (section "constants" "2. " +constants-header+)
-    
+
     (const-descriptions
       ("HC05_DEFAULT_TIMEOUT" +HC05_DEFAULT_TIMEOUT-description+)
       ("HC05_INQUIRY_DEFAULT_TIMEOUT" +HC05_INQUIRY_DEFAULT_TIMEOUT-description+)
@@ -149,28 +130,28 @@
       ("HC05_NAME_BUFSIZE" +HC05_NAME_BUFSIZE-description+)
       ("HC05_ADDRESS_MAXLEN" +HC05_ADDRESS_MAXLEN-description+)
       ("HC05_ADDRESS_BUFSIZE" +HC05_ADDRESS_BUFSIZE-description+))
-    
+
     (enum-description "HC05_Mode" +HC05_Mode-description+
       ("HC05_MODE_DATA" +HC05_MODE_DATA-description+)
       ("HC05_MODE_COMMAND" +HC05_MODE_COMMAND-description+))
-    
+
     (enum-description "HC05_Role" +HC05_Role-description+
       ("HC05_ROLE_SLAVE" +HC05_ROLE_SLAVE-description+)
       ("HC05_ROLE_MASTER" +HC05_ROLE_MASTER-description+)
       ("HC05_ROLE_SLAVE_LOOP" +HC05_ROLE_SLAVE_LOOP-description+))
-    
+
     (enum-description "HC05_InquiryMode" +HC05_InquiryMode-description+
       ("HC05_INQUIRY_STANDARD" +HC05_INQUIRY_STANDARD-description+)
       ("HC05_INQUIRY_RSSI"
         (lml-format +HC05_INQUIRY_RSSI-description+
            (html-string (hlink-from-pair +RSSI-wikipedia-link+)))))
-    
+
     (enum-description "HC05_Parity"
       (description-with-link +HC05_Parity-description+ +parity-bit-wikipedia-link+)
       ("HC05_NO_PARITY" +HC05_NO_PARITY-description+)
       ("HC05_PARITY_ODD" +HC05_PARITY_ODD-description+)
       ("HC05_PARITY_EVEN" +HC05_PARITY_EVEN-description+))
-    
+
     (enum-description "HC05_Connection" +HC05_Connection-description+
       ("HC05_CONNECT_BOUND"
         (lml-format +HC05_CONNECT_BOUND-description+
@@ -178,7 +159,7 @@
       ("HC05_CONNECT_ANY" +HC05_CONNECT_ANY-description+)
       ("HC05_CONNECT_SLAVE_LOOP" (span +HC05_CONNECT_SLAVE_LOOP-description+
                                        (chinese-warning))))
-    
+
     (enum-description "HC05_Security"
       (description-with-link +HC05_Security-description+ +security-link+)
       ("HC05_SEC_OFF" (span +HC05_SEC_OFF-description+ (chinese-warning)))
@@ -186,12 +167,12 @@
       ("HC05_SEC_SERVICE" +HC05_SEC_SERVICE-description+)
       ("HC05_SEC_LINK" +HC05_SEC_LINK-description+)
       ("HC05_SEC_UNKNOWN" (span +HC05_SEC_UNKNOWN-description+ (chinese-warning))))
-    
+
     (enum-description "HC05_Encryption" +HC05_Encryption-description+
       ("HC05_ENC_OFF" +HC05_ENC_OFF-description+)
       ("HC05_ENC_PTP" +HC05_ENC_PTP-description+)
       ("HC05_ENC_PTP_BROADCAST" +HC05_ENC_PTP_BROADCAST-description+))
-    
+
     (enum-description "HC05_State" +HC05_State-description+
       ("HC05_INITIALIZED" +HC05_INITIALIZED-description+)
       ("HC05_READY" +HC05_READY-description+)
@@ -201,5 +182,4 @@
       ("HC05_CONNECTING" +HC05_CONNECTING-description+)
       ("HC05_CONNECTED" +HC05_CONNECTED-description+)
       ("HC05_DISCONNECTED" +HC05_DISCONNECTED-description+)
-      ("HC05_UNKNOWN" +HC05_UNKNOWN-description+))
-    ))
+      ("HC05_UNKNOWN" +HC05_UNKNOWN-description+))))
