@@ -996,13 +996,13 @@ bool Bluetooth_HC05::disconnect(unsigned long timeout)
   if (strcmp(status_part, SUCCESS) == 0)
     m_errorCode = HC05_OK;
   else if (strcmp(status_part, LINK_LOSS) == 0)
-    m_errorCode = HC05_ERR_DISCONNECT_LINK_LOSS;
+    m_errorCode = HC05_ERR_DISC_LINK_LOSS;
   else if (strcmp(status_part, NO_SLC) == 0)
-    m_errorCode = HC05_ERR_DISCONNECT_NO_SLC;
+    m_errorCode = HC05_ERR_DISC_NO_SLC;
   else if (strcmp(status_part, TIMEOUT) == 0)
-    m_errorCode = HC05_ERR_DISCONNECT_TIMEOUT;
+    m_errorCode = HC05_ERR_DISC_TIMEOUT;
   else if (strcmp(status_part, ERROR) == 0)
-    m_errorCode = HC05_ERR_DISCONNECT_ERROR;
+    m_errorCode = HC05_ERR_DISC_ERROR;
 
    return readOperationResult();
 }

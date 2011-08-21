@@ -46,16 +46,15 @@
 (defmacro section (name &body body)
   `(h2 (a :name ,name ,@body)))
 
-(defmacro section-link (name prefix &body body)
-  `(line (lml-princ ,prefix) (hlink (string-concat "#" ,name) ,@body)))
-
 (defmacro const-description (name description)
  `(p (const-style ,name) (br) ,description))
 
 (defmacro const-descriptions (&rest pairs)
  `(progn
   ,@(loop for pair in pairs collecting
-     `(const-description ,(first pair) ,(second pair)))))
+      (if (symbolp pair)
+       `(const-description ,(symbol-name pair) ,pair)
+       `(const-description ,(first pair) ,(second pair))))))
 
 (defmacro enum-description (name description &body body)
  `(p(div :class "enum-description"
@@ -64,16 +63,26 @@
     (blockquote
       (const-descriptions ,@body)))))
 
-(defmacro css (&body body)
-  `(with-output-to-string (css-output)
-    (cssexp:with-css-output (css-output)
-      ,@body)))
-
 (defmacro style (&rest args)
   `(with style ,@args))
 
 (defmacro html-string (&body body)
- `(with-output-to-string (*html-output*) ,@body))
+ `(with-output-to-string (lml:*html-output*) ,@body))
+
+(defmacro html-format (format-string &rest args)
+ `(lml-format ,format-string
+  ,@(loop for arg in args collecting
+     `(with-output-to-string (lml:*html-output*) ,arg))))
+
+(defmacro html-format-to-string (format-string &rest args)
+ `(with-output-to-string (lml:*html-output*)
+    (html-format ,format-string ,@args)))
+
+(defmacro method-description (method description)
+ `(html-format "~a: ~a" (method-style ,method) (lml-princ ,description)))
+
+(defmacro const-description-symbol (symbol)
+  `(const-description (,(symbol-name symbol) ,symbol)))
 
 (defconstants
   (+xml-prologue-string+ "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
@@ -99,9 +108,8 @@
           :font-weight "bold")
         (:.method
           :color "#555533"
-          :font-weight "bold"
-          :font-style "italic"
-          );:font-weight "bold")
+          :font-weight "bold")
+          ;:font-style "italic")
         (:.enum-description
           :border "2px solid #aaaaaa"
           :padding "0.5em")
@@ -114,76 +122,86 @@
     (p (lml-format +synopsis+ (html-string (chinese-warning))))
 
     ;; Table of contents
-    (section-link "datatypes" "1. " +datatypes-header+)
-    (section-link "constants" "2. " +constants-header+)
+    (ol (li (hlink "#constants" +constants-header+))
+        (li (hlink "#types" +types-header+)))
 
-    (section "datatypes" "1. " +datatypes-header+)
-    (section "constants" "2. " +constants-header+)
+    (section "constants" +constants-header+)
 
     (const-descriptions
-      ("HC05_DEFAULT_TIMEOUT" +HC05_DEFAULT_TIMEOUT-description+)
-      ("HC05_INQUIRY_DEFAULT_TIMEOUT" +HC05_INQUIRY_DEFAULT_TIMEOUT-description+)
-      ("HC05_PAIRING_DEFAULT_TIMEOUT" +HC05_PAIRING_DEFAULT_TIMEOUT-description+)
-      ("HC05_PASSWORD_MAXLEN" +HC05_PASSWORD_MAXLEN-description+)
-      ("HC05_PASSWORD_BUFSIZE" +HC05_PASSWORD_BUFSIZE-description+)
-      ("HC05_NAME_MAXLEN" +HC05_NAME_MAXLEN-description+)
-      ("HC05_NAME_BUFSIZE" +HC05_NAME_BUFSIZE-description+)
-      ("HC05_ADDRESS_MAXLEN" +HC05_ADDRESS_MAXLEN-description+)
-      ("HC05_ADDRESS_BUFSIZE" +HC05_ADDRESS_BUFSIZE-description+))
+      HC05_DEFAULT_TIMEOUT
+      HC05_INQUIRY_DEFAULT_TIMEOUT
+      HC05_PAIRING_DEFAULT_TIMEOUT
+      HC05_PASSWORD_MAXLEN
+      HC05_PASSWORD_BUFSIZE
+      HC05_NAME_MAXLEN
+      HC05_NAME_BUFSIZE
+      HC05_ADDRESS_MAXLEN
+      HC05_ADDRESS_BUFSIZE)
 
-    (enum-description "HC05_Mode" +HC05_Mode-description+
-      ("HC05_MODE_DATA" +HC05_MODE_DATA-description+)
-      ("HC05_MODE_COMMAND" +HC05_MODE_COMMAND-description+))
+    (section "types" +types-header+)
 
-    (enum-description "HC05_Role" +HC05_Role-description+
-      ("HC05_ROLE_SLAVE" +HC05_ROLE_SLAVE-description+)
-      ("HC05_ROLE_MASTER" +HC05_ROLE_MASTER-description+)
-      ("HC05_ROLE_SLAVE_LOOP" +HC05_ROLE_SLAVE_LOOP-description+))
+    (p (line (type-style "BluetoothAddress")) +BluetoothAddress+)
 
-    (enum-description "HC05_InquiryMode" +HC05_InquiryMode-description+
-      ("HC05_INQUIRY_STANDARD" +HC05_INQUIRY_STANDARD-description+)
+    (enum-description "HC05_Mode" HC05_Mode
+      HC05_MODE_DATA HC05_MODE_COMMAND)
+
+    (enum-description "HC05_Role" HC05_Role
+      HC05_ROLE_SLAVE HC05_ROLE_MASTER HC05_ROLE_SLAVE_LOOP)
+
+    (enum-description "HC05_InquiryMode" HC05_InquiryMode
+      HC05_INQUIRY_STANDARD
       ("HC05_INQUIRY_RSSI"
-        (lml-format +HC05_INQUIRY_RSSI-description+
+        (lml-format HC05_INQUIRY_RSSI
            (html-string (hlink-from-pair +RSSI-wikipedia-link+)))))
 
     (enum-description "HC05_Parity"
-      (description-with-link +HC05_Parity-description+ +parity-bit-wikipedia-link+)
-      ("HC05_NO_PARITY" +HC05_NO_PARITY-description+)
-      ("HC05_PARITY_ODD" +HC05_PARITY_ODD-description+)
-      ("HC05_PARITY_EVEN" +HC05_PARITY_EVEN-description+))
+      (description-with-link HC05_Parity +parity-bit-wikipedia-link+)
+      HC05_NO_PARITY
+      HC05_PARITY_ODD
+      HC05_PARITY_EVEN)
 
-    (enum-description "HC05_Connection" +HC05_Connection-description+
-      ("HC05_CONNECT_BOUND"
-        (lml-format +HC05_CONNECT_BOUND-description+
-          (html-string (method-style +bind-method-name+))))
-      ("HC05_CONNECT_ANY" +HC05_CONNECT_ANY-description+)
-      ("HC05_CONNECT_SLAVE_LOOP" (span +HC05_CONNECT_SLAVE_LOOP-description+
+    (enum-description "HC05_Connection" HC05_Connection
+      ("HC05_CONNECT_BOUND" (span HC05_CONNECT_BOUND (method-style "bind()")))
+      HC05_CONNECT_ANY
+      ("HC05_CONNECT_SLAVE_LOOP" (span HC05_CONNECT_SLAVE_LOOP
                                        (chinese-warning))))
+    (defconstant +security-link+ "http://www.palowireless.com/bluearticles/cc1_security1.asp")
 
     (enum-description "HC05_Security"
-      (description-with-link +HC05_Security-description+ +security-link+)
-      ("HC05_SEC_OFF" (span +HC05_SEC_OFF-description+ (chinese-warning)))
-      ("HC05_SEC_NON_SECURE" +HC05_SEC_NON_SECURE-description+)
-      ("HC05_SEC_SERVICE" +HC05_SEC_SERVICE-description+)
-      ("HC05_SEC_LINK" +HC05_SEC_LINK-description+)
-      ("HC05_SEC_UNKNOWN" (span +HC05_SEC_UNKNOWN-description+ (chinese-warning))))
+      (html-format-to-string HC05_Security (hlink +security-link+ +security-link-name+))
+      ("HC05_SEC_OFF" (span HC05_SEC_OFF (chinese-warning)))
+      HC05_SEC_NON_SECURE HC05_SEC_SERVICE HC05_SEC_LINK
+      ("HC05_SEC_UNKNOWN" (span HC05_SEC_UNKNOWN (chinese-warning))))
 
     (enum-description "HC05_Encryption"
-      (html-string
-        (lml-format +HC05_Encryption-description+
-          (html-string (hlink-from-pair +security-link+))
-          (html-string (b +packet-encryption-section+))))
-      ("HC05_ENC_OFF" +HC05_ENC_OFF-description+)
-      ("HC05_ENC_PTP" +HC05_ENC_PTP-description+)
-      ("HC05_ENC_PTP_BROADCAST" +HC05_ENC_PTP_BROADCAST-description+))
+      (html-format-to-string HC05_Encryption
+        (hlink +security-link+ +security-link-name+)
+        (b +packet-encryption-section+))
+      HC05_ENC_OFF HC05_ENC_PTP HC05_ENC_PTP_BROADCAST)
 
-    (enum-description "HC05_State" +HC05_State-description+
-      ("HC05_INITIALIZED" +HC05_INITIALIZED-description+)
-      ("HC05_READY" (span +HC05_READY-description+ (chinese-warning)))
-      ("HC05_PAIRABLE" +HC05_PAIRABLE-description+)
-      ("HC05_PAIRED" +HC05_PAIRED-description+)
-      ("HC05_INQUIRING" +HC05_INQUIRING-description+)
-      ("HC05_CONNECTING" +HC05_CONNECTING-description+)
-      ("HC05_CONNECTED" +HC05_CONNECTED-description+)
-      ("HC05_DISCONNECTED" +HC05_DISCONNECTED-description+)
-      ("HC05_UNKNOWN" (span +HC05_UNKNOWN-description+ (chinese-warning))))))
+    (enum-description "HC05_State" HC05_State
+      HC05_INITIALIZED
+      ("HC05_READY" (span HC05_READY (chinese-warning)))
+      HC05_PAIRABLE HC05_PAIRED HC05_INQUIRING
+      HC05_CONNECTING HC05_CONNECTED HC05_DISCONNECTED
+      ("HC05_UNKNOWN" (span HC05_UNKNOWN (chinese-warning))))
+
+    (enum-description "HC05_Result" HC05_Result
+      HC05_OK
+      ("HC05_FAIL" (span HC05_FAIL (chinese-warning)))
+      HC05_ERR_TIMEOUT HC05_ERR_ARGUMENT HC05_ERR_DISC_LINK_LOSS
+      ("HC05_ERR_DISC_NO_SLC" (chinese-warning))
+      ("HC05_ERR_DISC_TIMEOUT" (span HC05_ERR_DISC_TIMEOUT (chinese-warning)))
+      ("HC05_ERR_DISC_ERROR" (span HC05_ERR_DISC_ERROR (chinese-warning)))
+      HC05_ERR_AT_COMMAND
+      ("HC05_ERR_DEFAULT_RESULT" (span HC05_ERR_DEFAULT_RESULT (chinese-warning)))
+      HC05_ERR_PSKEY_WRITE HC05_ERR_DEVICE_NAME_TOO_LONG HC05_ERR_NO_DEVICE_NAME
+      HC05_ERR_NAP_TOO_LONG HC05_ERR_UAP_TOO_LONG HC05_ERR_LAP_TOO_LONG
+      HC05_ERR_NO_PIO_MASK HC05_ERR_NO_PIO_NUMBER HC05_ERR_NO_DEVICE_TYPE
+      HC05_ERR_DEVICE_TYPE_TOO_LONG
+      HC05_ERR_NO_IAC HC05_ERR_IAC_TOO_LONG HC05_ERR_INVALID_IAC HC05_ERR_NO_PASSWORD
+      HC05_ERR_PASSWORD_TOO_LONG HC05_ERR_INVALID_MODULE_ROLE HC05_ERR_INVALID_BAUD_RATE
+      HC05_ERR_INVALID_STOP_BITS HC05_ERR_INVALID_PARITY_BITS HC05_ERR_DEVICE_NOT_IN_LIST
+      HC05_ERR_SPP_NOT_INITIALIZED HC05_ERR_SPP_REINIT HC05_ERR_INVALID_INQUIRY_MODE
+      HC05_ERR_INQUIRY_TIMEOUT_TOO_LONG HC05_ERR_NO_BLUETOOTH_ADDRESS
+      HC05_ERR_SECURITY_MODE HC05_ERR_ENCRYPTION_MODE)))
