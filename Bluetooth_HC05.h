@@ -20,6 +20,7 @@ enum
 };
 
 typedef uint8_t BluetoothAddress[6];
+typedef void (*InquiryCallback)(const BluetoothAddress &address);
 
 enum HC05_Mode { HC05_MODE_DATA = 0, HC05_MODE_COMMAND = 1 };
 enum HC05_Role { HC05_ROLE_SLAVE = 0, HC05_ROLE_MASTER = 1, HC05_ROLE_SLAVE_LOOP = 2 };
@@ -92,8 +93,6 @@ public:
   Bluetooth_HC05(HardwareSerial &serial = Serial);
   ~Bluetooth_HC05();
 
-  HC05_Result getLastError() const;
-
   void begin(unsigned baud_rate = 38400, uint8_t reset_pin = 0xFF,
     uint8_t mode_pin = 0xFF, HC05_Mode mode = HC05_MODE_DATA);
   bool probe(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
@@ -165,8 +164,6 @@ public:
   bool getState(HC05_State &state, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool initSerialPortProfile(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
 
-  typedef void (*InquiryCallback)(const BluetoothAddress &address);
-
   bool inquire(InquiryCallback callback, unsigned long timeout = HC05_INQUIRY_DEFAULT_TIMEOUT);
   bool cancelInquiry(unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool pair(const BluetoothAddress &address, unsigned long timeout = HC05_PAIRING_DEFAULT_TIMEOUT);
@@ -177,6 +174,8 @@ public:
     const char *address_str, char delimiter);
   static int printBluetoothAddress(char *address_str,
     const BluetoothAddress &address, char delimiter);
+  
+  HC05_Result getLastError() const;
 
 private:
   HardwareSerial *m_uart;

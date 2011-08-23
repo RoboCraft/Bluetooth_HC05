@@ -16,9 +16,117 @@
     ничерта не понял из документации и объяснить не могу.")
 
   (+table-of-contents-header+ "Оглавление")
-
+  (+methods-header+ "Методы")
   (+types-header+ "Типы")
   (+constants-header+ "Константы")
+  
+  (+m-begin+ "Подключает модуль HC-05")
+  (+m-probe+ "Простой тест модуля на приём команд. Команда: AT")
+  (+m-hardReset+
+    "Перезагружает модуль, прижимая его вывод RESET к 0 на 6 мс.
+    Пин для управления выводом RESET задаётся в методе ~a.")
+  (+m-softReset+
+    "")
+  (+m-getVersion+
+    "")
+  (+m-restoreDefaults+
+    "")
+  (+m-getAddress+
+    "")
+  (+m-getName+
+    "")
+  (+m-setName+
+    "")
+  (+m-getRemoteDeviceName+
+    "")
+  (+m-getRole+
+    "")
+  (+m-setRole+
+    "")
+  (+m-getDeviceClass+
+    "")
+  (+m-setDeviceClass+
+    "")
+  (+m-getInquiryAccessCode+
+    "")
+  (+m-setInquiryAccessCode+
+    "")
+  (+m-getInquiryMode+
+    "")
+  (+m-setInquiryMode+
+    "")
+  (+m-getPassword+
+    "")
+  (+m-setPassword+
+    "")
+  (+m-getSerialMode+
+    "")
+  (+m-setSerialMode+
+    "")
+  (+m-getConnectionMode+
+    "")
+  (+m-setConnectionMode+
+    "")
+  (+m-bind+
+    "")
+  (+m-getAddressBound+
+    "")
+  (+m-getLeds+
+    "")
+  (+m-setLeds+
+    "")
+  (+m-setPortState+
+    "")
+  (+m-getMultiplePorts+
+    "")
+  (+m-setMultiplePorts+
+    "")
+  (+m-getInquiryAndPagingParams+
+    "")
+  (+m-setInquiryAndPagingParams+
+    "")
+  (+m-getSniffParams+
+    "")
+  (+m-setSniffParams+
+    "")
+  (+m-enterSniffMode+
+    "")
+  (+m-exitSniffMode+
+    "")
+  (+m-getSecurityAndEncryption+
+    "")
+  (+m-setSecurityAndEncryption+
+    "")
+  (+m-deleteDeviceFromList+
+    "")
+  (+m-deleteAllDevicesFromList+
+    "")
+  (+m-findDeviceInList+
+    "")
+  (+m-countDevicesInList+
+    "")
+  (+m-getLastAuthenticatedDevice+
+    "")
+  (+m-getState+
+    "")
+  (+m-initSerialPortProfile+
+    "")
+  (+m-inquire+
+    "")
+  (+m-cancelInquiry+
+    "")
+  (+m-pair+
+    "")
+  (+m-connect+
+    "")
+  (+m-disconnect+
+    "")
+  (+m-parseBluetoothAddress+
+    "")
+  (+m-printBluetoothAddress+
+    "")
+  (+m-getLastError+
+    "")
 
   (HC05_DEFAULT_TIMEOUT
     "Тайм-аут по умолчанию для большинства команд.")
@@ -37,7 +145,11 @@
   (HC05_ADDRESS_BUFSIZE
     "Размер буфера для строкового представления Bluetooth-адреса.")
 
-  (+BluetoothAddress+ "Адрес Bluetooth-устройства, 6-байтовый массив")
+  (BluetoothAddress "Адрес Bluetooth-устройства, 6-байтовый массив")
+  (InquiryCallback
+    "Callback-функция, принимающая в качестве аргумента адрес
+    Bluetooth-устройства. Вызывается методом ~a при обнаружении
+    очередного Bluetooth-устройства в эфире.")
 
   (HC05_Mode "Режим работы модуля")
   (HC05_MODE_DATA "приём-передача данных")

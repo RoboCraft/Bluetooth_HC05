@@ -57,11 +57,12 @@
        `(const-description ,(first pair) ,(second pair))))))
 
 (defmacro enum-description (name description &body body)
- `(p(div :class "enum-description"
-    (line (type-style ,name))
-    (princ ,description)
-    (blockquote
-      (const-descriptions ,@body)))))
+ `(p
+    (div :class "box"
+      (line (type-style ,name))
+      (princ ,description)
+      (blockquote
+        (const-descriptions ,@body)))))
 
 (defmacro style (&rest args)
   `(with style ,@args))
@@ -78,11 +79,39 @@
  `(with-output-to-string (lml:*html-output*)
     (html-format ,format-string ,@args)))
 
-(defmacro method-description (method description)
- `(html-format "~a: ~a" (method-style ,method) (lml-princ ,description)))
-
 (defmacro const-description-symbol (symbol)
   `(const-description (,(symbol-name symbol) ,symbol)))
+
+(defmacro makeup-method-args (args indent)
+ `(span
+  ,@(loop for arg in args
+          with n = (length args)
+          for i = 0 then (incf i) collecting
+     `(span
+       ,(if (> n 1) (string-concat "<br />" indent) "")
+        (type-style ,(first arg))
+        " "
+       ,(second arg)
+       ,(if (>= (length arg) 3)
+          `(span " = " ,(third arg))
+          "")
+        ;; If i'ts no last argument, then append a comma, a newline and an indent
+       ,(if (and (> n 1) (< i (1- n))) "," "")
+       ,(if (and (> n 1) (= i (1- n))) "<br />" "")))))
+
+(defmacro method-description (return-type method-name arglist description)
+ `(let ((indent-length (length (format nil "~a ~a" ,return-type ,method-name))))
+    (p
+      (div :class "box"
+        (pre
+          (type-style ,return-type)
+          " "
+          (method-style ,method-name)
+          "("
+          (makeup-method-args ,arglist "  ")
+          ");"
+          (br))
+       ,description))))
 
 (defconstants
   (+xml-prologue-string+ "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
@@ -105,12 +134,12 @@
         (:.number :color "#007f00")
         (:.type
           :color "#2b71fd"
-          :font-weight "bold")
+          );:font-weight "bold")
         (:.method
           :color "#555533"
-          :font-weight "bold")
+          );:font-weight "bold")
           ;:font-style "italic")
-        (:.enum-description
+        (:.box
           :border "2px solid #aaaaaa"
           :padding "0.5em")
         (:.chinese-warning
@@ -122,8 +151,299 @@
     (p (lml-format +synopsis+ (html-string (chinese-warning))))
 
     ;; Table of contents
-    (ol (li (hlink "#constants" +constants-header+))
+    (ol (li (hlink "#methods" +methods-header+))
+        (li (hlink "#constants" +constants-header+))
         (li (hlink "#types" +types-header+)))
+
+    (section "methods" +methods-header+)
+    
+    (method-description "void" "begin"
+      (("unsigned" "baud_rate" (num-style "38400"))
+       ("uint8_t" "reset_pin" (num-style "0xFF"))
+       ("uint8_t" "mode_pin" (num-style "0xFF"))
+       ("HC05_Mode" "mode" (const-style "HC05_MODE_DATA")))
+      +m-begin+)
+    
+    (method-description "bool" "probe"
+      (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-probe+)
+    
+    (method-description "void" "hardReset" ()
+      (html-format +m-hardReset+ (method-style "begin()")))
+    
+    (method-description "bool" "softReset"
+      (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-softReset+)
+    
+    (method-description "bool" "getVersion"
+      (("char" "*buffer")
+       ("size_t" "buffer_size")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getVersion+)
+    
+    (method-description "bool" "restoreDefaults"
+      (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-restoreDefaults+)
+    
+    (method-description "bool" "getAddress"
+      (("BluetoothAddress" "&address")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getAddress+)
+    
+    (method-description "bool" "getName"
+      (("char" "*buffer")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getName+)
+    
+    (method-description "bool" "setName"
+      (("const char" "*name")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setName+)
+    
+    (method-description "bool" "getRemoteDeviceName"
+      (("char" "*buffer")
+       ("size_t" "buffer_size")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getRemoteDeviceName+)
+    
+    (method-description "bool" "getRole"
+      (("HC05_Role" "&role")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getRole+)
+    
+    (method-description "bool" "setRole"
+      (("HC05_Role" "role")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setRole+)
+    
+    (method-description "bool" "getDeviceClass"
+      (("uint32_t" "&device_class")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getDeviceClass+)
+    
+    (method-description "bool" "setDeviceClass"
+      (("uint32_t" "device_class")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setDeviceClass+)
+  
+    (method-description "bool" "getInquiryAccessCode"
+      (("uint32_t" "&iac")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getInquiryAccessCode+)
+  
+    (method-description "bool" "setInquiryAccessCode"
+      (("uint32_t" "iac")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setInquiryAccessCode+)
+  
+    (method-description "bool" "getInquiryMode"
+      (("HC05_InquiryMode" "&inq_mode")
+       ("int16_t" "&max_devices")
+       ("uint8_t" "&max_duration")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getInquiryMode+)
+  
+    (method-description "bool" "setInquiryMode"
+      (("HC05_InquiryMode" "inq_mode")
+       ("int16_t" "max_devices")
+       ("uint8_t" "max_duration")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setInquiryMode+)
+  
+    (method-description "bool" "getPassword"
+      (("char" "*buffer")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getPassword+)
+  
+    (method-description "bool" "setPassword"
+      (("const char" "*password")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setPassword+)
+  
+    (method-description "bool" "getSerialMode"
+      (("uint32_t" "&speed")
+       ("uint8_t" "&stop_bits")
+       ("HC05_Parity" "&parity")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getSerialMode+)
+  
+    (method-description "bool" "setSerialMode"
+      (("uint32_t" "speed")
+       ("uint8_t" "stop_bits")
+       ("HC05_Parity" "parity")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setSerialMode+)
+  
+    (method-description "bool" "getConnectionMode"
+      (("HC05_Connection" "&connection_mode")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getConnectionMode+)
+  
+    (method-description "bool" "setConnectionMode"
+      (("HC05_Connection" "connection_mode")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setConnectionMode+)
+  
+    (method-description "bool" "bind"
+      (("const BluetoothAddress" "&address")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-bind+)
+  
+    (method-description "bool" "getAddressBound"
+      (("BluetoothAddress" "&address")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getAddressBound+)
+  
+    (method-description "bool" "getLeds"
+      (("bool" "&led_status")
+       ("bool" "&led_connection")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getLeds+)
+  
+    (method-description "bool" "setLeds"
+      (("bool" "led_status")
+       ("bool" "led_connection")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setLeds+)
+  
+    (method-description "bool" "setPortState"
+      (("uint8_t" "port_num")
+       ("uint8_t" "port_state")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setPortState+)
+  
+    (method-description "bool" "getMultiplePorts"
+      (("uint16_t" "&port_states")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getMultiplePorts+)
+  
+    (method-description "bool" "setMultiplePorts"
+      (("uint16_t" "port_states")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setMultiplePorts+)
+  
+    (method-description "bool" "getInquiryAndPagingParams"
+      (("uint16_t" "&inquiry_interval")
+       ("uint16_t" "&inquiry_duration")
+       ("uint16_t" "&paging_interval")
+       ("uint16_t" "&paging_duration")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getInquiryAndPagingParams+)
+  
+    (method-description "bool" "setInquiryAndPagingParams"
+      (("uint16_t" "inquiry_interval")
+       ("uint16_t" "inquiry_duration")
+       ("uint16_t" "paging_interval")
+       ("uint16_t" "paging_duration")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setInquiryAndPagingParams+)
+  
+    (method-description "bool" "getSniffParams"
+      (("uint16_t" "&max_time")
+       ("uint16_t" "&min_time")
+       ("uint16_t" "&retry_interval")
+       ("uint16_t" "&sniff_timeout")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getSniffParams+)
+  
+    (method-description "bool" "setSniffParams"
+      (("uint16_t" "max_time")
+       ("uint16_t" "min_time")
+       ("uint16_t" "retry_interval")
+       ("uint16_t" "sniff_timeout")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setSniffParams+)
+  
+    (method-description "bool" "enterSniffMode"
+      (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-enterSniffMode+)
+  
+    (method-description "bool" "exitSniffMode"
+      (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-exitSniffMode+)
+  
+    (method-description "bool" "getSecurityAndEncryption"
+      (("HC05_Security" "&security")
+       ("HC05_Encryption" "&encryption")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getSecurityAndEncryption+)
+  
+    (method-description "bool" "setSecurityAndEncryption"
+      (("HC05_Security" "security")
+       ("HC05_Encryption" "encryption")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-setSecurityAndEncryption+)
+  
+    (method-description "bool" "deleteDeviceFromList"
+      (("const BluetoothAddress" "&address")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-deleteDeviceFromList+)
+  
+    (method-description "bool" "deleteAllDevicesFromList"
+      (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-deleteAllDevicesFromList+)
+  
+    (method-description "bool" "findDeviceInList"
+      (("const BluetoothAddress" "&address")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-findDeviceInList+)
+  
+    (method-description "bool" "countDevicesInList"
+      (("uint8_t" "&device_count")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-countDevicesInList+)
+  
+    (method-description "bool" "getLastAuthenticatedDevice"
+      (("BluetoothAddress" "&address")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getLastAuthenticatedDevice+)
+  
+    (method-description "bool" "getState"
+      (("HC05_State" "&state")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-getState+)
+  
+    (method-description "bool" "initSerialPortProfile"
+      (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-initSerialPortProfile+)
+  
+    (method-description "bool" "inquire"
+      (("InquiryCallback" "callback")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-inquire+)
+  
+    (method-description "bool" "cancelInquiry"
+      (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-cancelInquiry+)
+  
+    (method-description "bool" "pair"
+      (("const BluetoothAddress" "&address")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-pair+)
+  
+    (method-description "bool" "connect"
+      (("const BluetoothAddress" "&address")
+       ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-connect+)
+  
+    (method-description "bool" "disconnect"
+      (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
+      +m-disconnect+)
+  
+    (method-description "static bool" "parseBluetoothAddress"
+      (("BluetoothAddress" "&address")
+       ("const char" "*address_str")
+       ("char" "delimiter"))
+      +m-parseBluetoothAddress+)
+  
+    (method-description "static int" "printBluetoothAddress"
+      (("char" "*address_str")
+       ("const BluetoothAddress" "&address")
+       ("char" "delimiter"))
+      +m-printBluetoothAddress+)
+  
+    (method-description "HC05_Result" "getLastError" () ;!const)
+      +m-getLastError+)
 
     (section "constants" +constants-header+)
 
@@ -140,7 +460,8 @@
 
     (section "types" +types-header+)
 
-    (p (line (type-style "BluetoothAddress")) +BluetoothAddress+)
+    (p (div :class "box" (line (type-style "BluetoothAddress")) BluetoothAddress))
+    (p (div :class "box" (line (type-style "InquiryCallback")) (html-format InquiryCallback (method-style "inquire()"))))
 
     (enum-description "HC05_Mode" HC05_Mode
       HC05_MODE_DATA HC05_MODE_COMMAND)
