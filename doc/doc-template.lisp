@@ -111,7 +111,7 @@
           (makeup-method-args ,arglist "  ")
           ");"
           (br))
-       ,description))))
+         ,description))))
 
 (defconstants
   (+xml-prologue-string+ "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
@@ -148,7 +148,8 @@
 
   (body
     (h1 +top-header+)
-    (p (lml-format +synopsis+ (html-string (chinese-warning))))
+    (p (html-format +synopsis+ (chinese-warning)))
+    (p +module-hints+)
 
     ;; Table of contents
     (ol (li (hlink "#methods" +methods-header+))
@@ -179,7 +180,7 @@
       (("char" "*buffer")
        ("size_t" "buffer_size")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getVersion+)
+      (html-format +m-getVersion+ (i "buffer") (i "buffer_size")))
     
     (method-description "bool" "restoreDefaults"
       (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
@@ -188,12 +189,12 @@
     (method-description "bool" "getAddress"
       (("BluetoothAddress" "&address")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getAddress+)
+      (html-format +m-getAddress+ (i "address")))
     
     (method-description "bool" "getName"
       (("char" "*buffer")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getName+)
+      (html-format +m-getName+ (i "buffer") (i (const-style "HC05_NAME_BUFSIZE"))))
     
     (method-description "bool" "setName"
       (("const char" "*name")
@@ -201,15 +202,17 @@
       +m-setName+)
     
     (method-description "bool" "getRemoteDeviceName"
-      (("char" "*buffer")
+      (("const BluetoothAddress" "&address")
+       ("char" "*buffer")
        ("size_t" "buffer_size")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getRemoteDeviceName+)
+      (html-format +m-getRemoteDeviceName+
+        (i "address") (i "buffer") (i "buffer_size")))
     
     (method-description "bool" "getRole"
       (("HC05_Role" "&role")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getRole+)
+      (html-format +m-getRole+ (i "role")))
     
     (method-description "bool" "setRole"
       (("HC05_Role" "role")
@@ -219,7 +222,7 @@
     (method-description "bool" "getDeviceClass"
       (("uint32_t" "&device_class")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getDeviceClass+)
+      (html-format +m-getDeviceClass+ (i "device_class")))
     
     (method-description "bool" "setDeviceClass"
       (("uint32_t" "device_class")
@@ -229,7 +232,7 @@
     (method-description "bool" "getInquiryAccessCode"
       (("uint32_t" "&iac")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getInquiryAccessCode+)
+      (html-format +m-getInquiryAccessCode+ (i "iac")))
   
     (method-description "bool" "setInquiryAccessCode"
       (("uint32_t" "iac")
@@ -241,7 +244,8 @@
        ("int16_t" "&max_devices")
        ("uint8_t" "&max_duration")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getInquiryMode+)
+      (html-format +m-getInquiryMode+
+        (i "inq_mode") (i "max_devices") (i "max_duration") (chinese-warning)))
   
     (method-description "bool" "setInquiryMode"
       (("HC05_InquiryMode" "inq_mode")
@@ -253,7 +257,7 @@
     (method-description "bool" "getPassword"
       (("char" "*buffer")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getPassword+)
+      (html-format +m-getPassword+ (i "buffer") (i (const-style "HC05_PASSWORD_BUFSIZE"))))
   
     (method-description "bool" "setPassword"
       (("const char" "*password")
@@ -265,7 +269,7 @@
        ("uint8_t" "&stop_bits")
        ("HC05_Parity" "&parity")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getSerialMode+)
+      (html-format +m-getSerialMode+ (i "speed") (i "stop_bits") (i "parity")))
   
     (method-description "bool" "setSerialMode"
       (("uint32_t" "speed")
@@ -277,7 +281,7 @@
     (method-description "bool" "getConnectionMode"
       (("HC05_Connection" "&connection_mode")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getConnectionMode+)
+      (html-format +m-getConnectionMode+ (i "connection_mode")))
   
     (method-description "bool" "setConnectionMode"
       (("HC05_Connection" "connection_mode")
@@ -287,18 +291,18 @@
     (method-description "bool" "bind"
       (("const BluetoothAddress" "&address")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-bind+)
+      (html-format +m-bind+ (i "address")))
   
     (method-description "bool" "getAddressBound"
       (("BluetoothAddress" "&address")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getAddressBound+)
+      (html-format +m-getAddressBound+ (i "address")))
   
     (method-description "bool" "getLeds"
       (("bool" "&led_status")
        ("bool" "&led_connection")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getLeds+)
+      (html-format +m-getLeds+ (i "led_status") (i "led_connection")))
   
     (method-description "bool" "setLeds"
       (("bool" "led_status")
@@ -310,12 +314,12 @@
       (("uint8_t" "port_num")
        ("uint8_t" "port_state")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-setPortState+)
+      (html-format +m-setPortState+ (i "port_num") (i "port_state")))
   
     (method-description "bool" "getMultiplePorts"
       (("uint16_t" "&port_states")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getMultiplePorts+)
+      (html-format +m-getMultiplePorts+ (i "port_states")))
   
     (method-description "bool" "setMultiplePorts"
       (("uint16_t" "port_states")
@@ -328,7 +332,7 @@
        ("uint16_t" "&paging_interval")
        ("uint16_t" "&paging_duration")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getInquiryAndPagingParams+)
+      (html-format +m-getInquiryAndPagingParams+ (chinese-warning)))
   
     (method-description "bool" "setInquiryAndPagingParams"
       (("uint16_t" "inquiry_interval")
@@ -336,7 +340,8 @@
        ("uint16_t" "paging_interval")
        ("uint16_t" "paging_duration")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-setInquiryAndPagingParams+)
+      (html-format +m-setInquiryAndPagingParams+
+        (method-style "getInquiryAndPagingParams()") (chinese-warning)))
   
     (method-description "bool" "getSniffParams"
       (("uint16_t" "&max_time")
@@ -344,7 +349,7 @@
        ("uint16_t" "&retry_interval")
        ("uint16_t" "&sniff_timeout")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getSniffParams+)
+      (html-format +m-getSniffParams+ (chinese-warning)))
   
     (method-description "bool" "setSniffParams"
       (("uint16_t" "max_time")
@@ -352,21 +357,22 @@
        ("uint16_t" "retry_interval")
        ("uint16_t" "sniff_timeout")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-setSniffParams+)
+      (html-format +m-setSniffParams+
+        (method-style "getSniffParams()") (chinese-warning)))
   
     (method-description "bool" "enterSniffMode"
       (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-enterSniffMode+)
+      (html-format +m-enterSniffMode+ (chinese-warning)))
   
     (method-description "bool" "exitSniffMode"
       (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-exitSniffMode+)
+      (html-format +m-exitSniffMode+ (chinese-warning)))
   
     (method-description "bool" "getSecurityAndEncryption"
       (("HC05_Security" "&security")
        ("HC05_Encryption" "&encryption")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getSecurityAndEncryption+)
+      (html-format +m-getSecurityAndEncryption+ (i "security") (i "encryption")))
   
     (method-description "bool" "setSecurityAndEncryption"
       (("HC05_Security" "security")
@@ -377,7 +383,7 @@
     (method-description "bool" "deleteDeviceFromList"
       (("const BluetoothAddress" "&address")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-deleteDeviceFromList+)
+      (html-format +m-deleteDeviceFromList+ (i "address")))
   
     (method-description "bool" "deleteAllDevicesFromList"
       (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
@@ -386,7 +392,7 @@
     (method-description "bool" "findDeviceInList"
       (("const BluetoothAddress" "&address")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-findDeviceInList+)
+      (html-format +m-findDeviceInList+ (i "address")))
   
     (method-description "bool" "countDevicesInList"
       (("uint8_t" "&device_count")
@@ -396,12 +402,12 @@
     (method-description "bool" "getLastAuthenticatedDevice"
       (("BluetoothAddress" "&address")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getLastAuthenticatedDevice+)
+      (html-format +m-getLastAuthenticatedDevice+ (i "address")))
   
     (method-description "bool" "getState"
       (("HC05_State" "&state")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-getState+)
+      (html-format +m-getState+ (i "state")))
   
     (method-description "bool" "initSerialPortProfile"
       (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
@@ -410,7 +416,7 @@
     (method-description "bool" "inquire"
       (("InquiryCallback" "callback")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-inquire+)
+      (html-format +m-inquire+ (i "callback") (method-style "inquire()")))
   
     (method-description "bool" "cancelInquiry"
       (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
@@ -419,28 +425,16 @@
     (method-description "bool" "pair"
       (("const BluetoothAddress" "&address")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-pair+)
+      (html-format +m-pair+ (i "address")))
   
     (method-description "bool" "connect"
       (("const BluetoothAddress" "&address")
        ("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
-      +m-connect+)
+      (html-format +m-connect+ (i "address")))
   
     (method-description "bool" "disconnect"
       (("unsigned long" "timeout" (const-style "HC05_DEFAULT_TIMEOUT")))
       +m-disconnect+)
-  
-    (method-description "static bool" "parseBluetoothAddress"
-      (("BluetoothAddress" "&address")
-       ("const char" "*address_str")
-       ("char" "delimiter"))
-      +m-parseBluetoothAddress+)
-  
-    (method-description "static int" "printBluetoothAddress"
-      (("char" "*address_str")
-       ("const BluetoothAddress" "&address")
-       ("char" "delimiter"))
-      +m-printBluetoothAddress+)
   
     (method-description "HC05_Result" "getLastError" () ;!const)
       +m-getLastError+)

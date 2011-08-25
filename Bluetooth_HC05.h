@@ -104,7 +104,8 @@ public:
   bool getAddress(BluetoothAddress &address, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool getName(char *buffer, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool setName(const char *name, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
-  bool getRemoteDeviceName(char *buffer, size_t buffer_size,
+  bool getRemoteDeviceName(const BluetoothAddress &address,
+    char *buffer, size_t buffer_size,
     unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool getRole(HC05_Role &role, unsigned long timeout = HC05_DEFAULT_TIMEOUT);
   bool setRole(HC05_Role role, unsigned long timeout = HC05_DEFAULT_TIMEOUT);

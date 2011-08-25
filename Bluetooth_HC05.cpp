@@ -184,8 +184,8 @@ bool Bluetooth_HC05::setName(const char *name, unsigned long timeout)
 }
 
 
-bool Bluetooth_HC05::getRemoteDeviceName(char *buffer,
-  size_t buffer_size, unsigned long timeout)
+bool Bluetooth_HC05::getRemoteDeviceName(const BluetoothAddress &address,
+  char *buffer, size_t buffer_size, unsigned long timeout)
 {
   startOperation(timeout);
 
@@ -195,8 +195,10 @@ bool Bluetooth_HC05::getRemoteDeviceName(char *buffer,
     return false;
   }
 
+  char address_str[HC05_ADDRESS_BUFSIZE];
+  printBluetoothAddress(address_str, address, ',');
   PGM_STRING(command, "RNAME?");
-  writeCommand(command);
+  writeCommand(command, address);
 
   char response[40];
   PGM_STRING(response_pattern, "+RNAME:");
