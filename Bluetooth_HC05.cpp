@@ -198,7 +198,7 @@ bool Bluetooth_HC05::getRemoteDeviceName(const BluetoothAddress &address,
   char address_str[HC05_ADDRESS_BUFSIZE];
   printBluetoothAddress(address_str, address, ',');
   PGM_STRING(command, "RNAME?");
-  writeCommand(command, address);
+  writeCommand(command, address_str);
 
   char response[40];
   PGM_STRING(response_pattern, "+RNAME:");
