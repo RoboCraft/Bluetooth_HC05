@@ -500,7 +500,7 @@ bool Bluetooth_HC05::getConnectionMode(
   writeCommand(command);
 
   char response[20];
-  PGM_STRING(response_pattern, "+CMODE:");
+  PGM_STRING(response_pattern, "+CMOD:");
   const char *mode_part = readResponseWithPrefix(
     response, sizeof(response), response_pattern);
 
