@@ -1,3 +1,25 @@
+/* Bluetooth_HC05 library for Arduino wraps around the AT-command interface of
+ * HC-05 Bluetooth module based on BlueCore4(TM) technology from Cambridge Silicon Radio.
+ * 
+ * See the article about these modules at http://robocraft.ru/blog/electronics/587.html
+ * 
+ * Copyright (C) 2011 Artem Borisovskiy (bytefu@gmail.com), http://robocraft.ru
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #ifndef BLUETOOTH_HC05_
 #define BLUETOOTH_HC05_
 
