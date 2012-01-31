@@ -17,10 +17,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#if defined(ARDUINO) && ARDUINO >= 100
+#include "Arduino.h"
+#else
+#include "WProgram.h"
+#endif
+
 #include <avr/pgmspace.h>
 #include <ctype.h>
 #include <stdio.h>
-#include <WProgram.h>
 #include "Bluetooth_HC05.h"
 
 
@@ -1279,8 +1284,14 @@ unsigned long Bluetooth_HC05::operationDuration() const
   return elapsed_ticks;
 }
 
-
+#if defined(ARDUINO) && ARDUINO >= 100
+size_t Bluetooth_HC05::write(uint8_t data)
+#else
 void Bluetooth_HC05::write(uint8_t data)
+#endif
 {
+  #if defined(ARDUINO) && ARDUINO >= 100
+  return
+  #endif
   m_uart->write(data);
 }

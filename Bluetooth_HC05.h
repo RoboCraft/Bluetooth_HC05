@@ -23,7 +23,12 @@
 #ifndef BLUETOOTH_HC05_
 #define BLUETOOTH_HC05_
 
-#include <WProgram.h>
+#if defined(ARDUINO) && ARDUINO >= 100
+#include "Arduino.h"
+#else
+#include "WProgram.h"
+#endif
+
 #include <stdlib.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -225,7 +230,11 @@ private:
   bool isOperationTimedOut() const;
   unsigned long operationDuration() const;
 
+  #if defined(ARDUINO) && ARDUINO >= 100
+  virtual size_t write(uint8_t data);
+  #else
   virtual void write(uint8_t data);
+  #endif
 };
 
 #endif // BLUETOOTH_HC05_
